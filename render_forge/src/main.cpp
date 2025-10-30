@@ -7,7 +7,8 @@
 
 int main() {
     try {
-        Engine engine{ 1920, 1080, "RenderForge" };
+        Engine engine{ 1280, 720, "RenderForge" };
+        engine.setup_vulkan();
     }
     catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
