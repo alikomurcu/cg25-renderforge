@@ -2,3 +2,65 @@
 x64/**
 render_forge/x64/**
 
+# CMake build directories and files
+build/
+build-*/
+out/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.ninja
+*.ninja_deps
+*.ninja_log
+compile_commands.json
+Testing/
+CMakeSettings.json
+
+# Visual Studio (MSVC)
+.vs/
+*.sln
+*.suo
+*.vcxproj
+*.vcxproj.*
+*.user
+*.userosscache
+*.opendb
+*.VC.db
+*.VC.opendb
+
+# Visual Studio Code
+.vscode/
+
+# Compiled objects and binaries
+*.obj
+*.o
+*.lo
+*.la
+*.il*
+*.idb
+*.pdb
+*.exe
+*.dll
+*.lib
+*.a
+*.so
+*.dylib
+bin/
+
+# Caches and temporary files
+*.cache
+*.pch
+*.tmp
+*.log
+
+# OS-specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Generated shader binaries
+*.spv
+compile_shaders.bat
+
+
