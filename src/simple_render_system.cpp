@@ -61,16 +61,18 @@ namespace frg
         frgPipeline = std::make_unique<FrgPipeline>(frgDevice, "shaders/triangle.vert.spv", "shaders/triangle.frag.spv", pipelineConfig);
     }
 
-    void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<FrgGameObject> &gameObjects)
+    void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<FrgGameObject> &gameObjects, const FrgCamera &camera)
     {
         frgPipeline->bind(commandBuffer);
+        auto projectionView = camera.getProjectionMatrix() * camera.getViewMatrix();
+
         for (auto &gameObject : gameObjects)
         {
             gameObject.transform.rotation.y = glm::mod(gameObject.transform.rotation.y + 0.01f, glm::two_pi<float>());
             gameObject.transform.rotation.z = glm::mod(gameObject.transform.rotation.z + 0.005f, glm::two_pi<float>());
             SimplePushConstantData push{};
             push.color = gameObject.color;
-            push.transform = gameObject.transform.mat4();
+            push.transform = projectionView * gameObject.transform.mat4();
             vkCmdPushConstants(
                 commandBuffer,
                 pipelineLayout,

@@ -26,6 +26,11 @@ namespace frg
             return frgSwapChain->getRenderPass();
         }
 
+        float getAspectRatio() const
+        {
+            return frgSwapChain->extentAspectRatio();
+        }
+
         bool isFrameInProgress() const { return isFrameStarted; }
 
         VkCommandBuffer getCurrentCommandBuffer() const

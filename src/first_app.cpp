@@ -1,4 +1,5 @@
 #include "first_app.hpp"
+#include "frg_camera.hpp"
 
 #include "simple_render_system.hpp"
 
@@ -25,14 +26,24 @@ namespace frg
     void FirstApp::run()
     {
         SimpleRenderSystem simpleRenderSystem{frgDevice, frgRenderer.getSwapChainRenderPass()};
+        FrgCamera camera{};
+        // example camera setup
+        camera.setViewTarget(
+            glm::vec3{-1.f, -2.f, 2.f},
+            glm::vec3{0.f, 0.f, 2.5f});
+
         while (!frgWindow.shouldClose())
         {
             glfwPollEvents();
+            float aspect = frgRenderer.getAspectRatio();
+            // camera.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1);
+            camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
+
             if (auto commandBuffer = frgRenderer.beginFrame())
             {
                 // make the render passes here, for example: shadow pass, post processing pass, etc.
                 frgRenderer.beginSwapChainRenderPass(commandBuffer);
-                simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects);
+                simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects, camera);
 
                 frgRenderer.endSwapChainRenderPass(commandBuffer);
                 frgRenderer.endFrame();
@@ -107,7 +118,7 @@ namespace frg
         std::shared_ptr<FrgModel> cubeModel = createCubeModel(frgDevice, {0.f, 0.f, 0.f});
         auto cube = FrgGameObject::createGameObject();
         cube.model = cubeModel;
-        cube.transform.translation = {0.f, 0.f, 0.5f};
+        cube.transform.translation = {0.f, 0.f, 2.5f};
         cube.transform.scale = {0.5f, 0.5f, 0.5f};
         gameObjects.push_back(std::move(cube));
     }

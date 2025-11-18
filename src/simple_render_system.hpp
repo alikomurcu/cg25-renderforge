@@ -4,6 +4,7 @@
 #include "frg_game_object.hpp"
 #include "frg_pipeline.hpp"
 #include "frg_model.hpp"
+#include "frg_camera.hpp"
 
 // std
 #include <memory>
@@ -19,7 +20,7 @@ namespace frg
 
         SimpleRenderSystem(const SimpleRenderSystem &) = delete;
         SimpleRenderSystem &operator=(const SimpleRenderSystem &) = delete;
-        void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<FrgGameObject> &gameObjects);
+        void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<FrgGameObject> &gameObjects, const FrgCamera &camera);
 
     private:
         void createPipelineLayout();
