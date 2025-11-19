@@ -8,6 +8,20 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
+
+include(FetchContent)
+set(FETCHCONTENT_BASE_DIR ${PROJECT_SOURCE_DIR}/external CACHE PATH "Missing description." FORCE)
+
+# --- Assimp ---
+FetchContent_Declare(assimp
+GIT_REPOSITORY https://github.com/assimp/assimp.git
+GIT_TAG master)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INJECT_DEBUG_POSTFIX OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(assimp)
+
 # --- Vulkan SDK
 find_package(Vulkan REQUIRED)
 
@@ -105,12 +119,14 @@ install(DIRECTORY "${SHADER_DIR}" DESTINATION .)
 target_include_directories(frg PRIVATE
     "${CMAKE_SOURCE_DIR}/external/glm"
     "${CMAKE_SOURCE_DIR}/src"
+    external/assimp-src/include
 )
 
 target_link_libraries(frg PRIVATE
     Vulkan::Vulkan
     ${GLFW_LINK_TARGET}
     ${GLFW_WIN_SYS_LIBS}
+    assimp
 )
 
 if (APPLE)
