@@ -62,6 +62,7 @@ add_executable(frg
     src/frg_renderer.cpp
     src/simple_render_system.cpp
     src/frg_camera.cpp
+    src/keyboard_movement_controller.cpp
 )
 
 # --- Shader compilation (GLSL -> SPIR-V) ---

@@ -68,8 +68,6 @@ namespace frg
 
         for (auto &gameObject : gameObjects)
         {
-            gameObject.transform.rotation.y = glm::mod(gameObject.transform.rotation.y + 0.01f, glm::two_pi<float>());
-            gameObject.transform.rotation.z = glm::mod(gameObject.transform.rotation.z + 0.005f, glm::two_pi<float>());
             SimplePushConstantData push{};
             push.color = gameObject.color;
             push.transform = projectionView * gameObject.transform.mat4();
