@@ -1,44 +1,39 @@
 #pragma once
 
 #include "frg_device.hpp"
+#include "frg_mesh.hpp"
 
 // libs
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
+#include "assimp/Importer.hpp"
+#include "assimp/postprocess.h"
+#include "assimp/scene.h"
+
 // std
+#include <memory>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
-namespace frg
-{
-    class FrgModel
-    {
-    public:
-        struct Vertex
-        {
-            glm::vec3 position;
-            glm::vec3 color;
-            static std::vector<VkVertexInputBindingDescription> getBindingDescriptions();
-            static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
-        };
+namespace frg {
+class FrgModel {
+  public:
+    FrgModel(FrgDevice &device, const std::string &path);
+    void draw();
 
-        FrgModel(
-            FrgDevice &device,
-            const std::vector<Vertex> &vertices);
-        ~FrgModel();
+  private:
+    std::vector<std::unique_ptr<FrgMesh>> meshes;
+    std::string dir;
+    FrgDevice &frg_device;
 
-        FrgModel(const FrgModel &) = delete;
-        FrgModel &operator=(const FrgModel &) = delete;
-
-        void bind(VkCommandBuffer commandBuffer);
-        void draw(VkCommandBuffer commandBuffer);
-
-    private:
-        void createVertexBuffers(const std::vector<Vertex> &vertices);
-        FrgDevice &frgDevice;
-        VkBuffer vertexBuffer;
-        VkDeviceMemory vertexBufferMemory;
-        uint32_t vertexCount;
-    };
+    void load_model(const std::string &path);
+    void process_node(aiNode *node, const aiScene *scene);
+    std::unique_ptr<FrgMesh> process_mesh(aiMesh *mesh, const aiScene *scene);
+    std::vector<std::unique_ptr<Texture>>
+        load_material_textures(aiMaterial *mat, aiTextureType type,
+                               std::string type_name);
+};
 } // namespace frg

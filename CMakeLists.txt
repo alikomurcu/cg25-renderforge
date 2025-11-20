@@ -22,6 +22,12 @@ set(ASSIMP_INJECT_DEBUG_POSTFIX OFF CACHE BOOL "" FORCE)
 set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(assimp)
 
+# --- stb_image ---
+FetchContent_Declare(stb
+GIT_REPOSITORY https://github.com/nothings/stb.git
+GIT_TAG master)
+FetchContent_MakeAvailable(stb)
+
 # --- Vulkan SDK
 find_package(Vulkan REQUIRED)
 
@@ -76,6 +82,7 @@ add_executable(frg
     src/frg_renderer.cpp
     src/simple_render_system.cpp
     src/frg_camera.cpp
+    src/frg_mesh.cpp
 )
 
 # --- Shader compilation (GLSL -> SPIR-V) ---
@@ -120,6 +127,7 @@ target_include_directories(frg PRIVATE
     "${CMAKE_SOURCE_DIR}/external/glm"
     "${CMAKE_SOURCE_DIR}/src"
     external/assimp-src/include
+    external/stb-src
 )
 
 target_link_libraries(frg PRIVATE
