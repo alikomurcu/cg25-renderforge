@@ -93,6 +93,15 @@ Texture::Texture(FrgDevice &device, const std::string &type,
     {
         throw std::runtime_error("failed to create texture image view!");
     }
+
+    create_descriptor_image_info();
+}
+
+void Texture::create_descriptor_image_info() {
+    descriptor_image_info.imageLayout =
+        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    descriptor_image_info.imageView = texture_image_view;
+    descriptor_image_info.sampler = device.textureSampler();
 }
 
 void Texture::transition_image_layout(VkImage image, VkFormat format,

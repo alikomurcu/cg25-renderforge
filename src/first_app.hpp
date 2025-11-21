@@ -1,7 +1,6 @@
 #pragma once
 
-#include "assimp/importer.hpp"
-#include "assimp/postprocess.h"
+#include "frg_descriptor.hpp"
 #include "frg_device.hpp"
 #include "frg_game_object.hpp"
 #include "frg_renderer.hpp"
@@ -14,7 +13,7 @@
 
 namespace frg {
 class FirstApp {
-   public:
+  public:
     static constexpr int WIDTH = 800;
     static constexpr int HEIGHT = 600;
 
@@ -26,13 +25,14 @@ class FirstApp {
 
     void run();
 
-   private:
+  private:
     void loadGameObjects();
 
     FrgWindow frgWindow{WIDTH, HEIGHT, "MERHABA VULKAN!"};
     FrgDevice frgDevice{frgWindow};
+    FrgDescriptor frgDescriptor{frgDevice};
     FrgRenderer frgRenderer{frgWindow, frgDevice};
 
     std::vector<FrgGameObject> gameObjects;
 };
-}  // namespace frg
+} // namespace frg

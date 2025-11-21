@@ -18,8 +18,9 @@ struct SimplePushConstantData {
 };
 
 SimpleRenderSystem::SimpleRenderSystem(FrgDevice &device,
-                                       VkRenderPass renderPass)
-    : frgDevice{device} {
+                                       VkRenderPass renderPass,
+                                       FrgDescriptor &descriptor)
+    : frgDevice{device}, frgDescriptor{descriptor} {
     createPipelineLayout();
     createPipeline(renderPass);
 }
@@ -37,8 +38,8 @@ void SimpleRenderSystem::createPipelineLayout() {
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 0;
-    pipelineLayoutInfo.pSetLayouts = nullptr;
+    pipelineLayoutInfo.setLayoutCount = frgDescriptor.descriptorSetCount();
+    pipelineLayoutInfo.pSetLayouts = frgDescriptor.descriptorSetLayout();
     pipelineLayoutInfo.pushConstantRangeCount = 1;
     pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
@@ -88,7 +89,14 @@ void SimpleRenderSystem::renderGameObjects(
                            0,
                            sizeof(SimplePushConstantData),
                            &push);
-
+        vkCmdBindDescriptorSets(commandBuffer,
+                                VK_SHADER_STAGE_FRAGMENT_BIT,
+                                pipelineLayout,
+                                0,
+                                frgDescriptor.descriptorSetCount(),
+                                frgDescriptor.descriptorSet(),
+                                0,
+                                nullptr);
         // gameObject.model->bind(commandBuffer);
         // gameObject.model->draw(commandBuffer);
     }

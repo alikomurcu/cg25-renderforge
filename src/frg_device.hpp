@@ -43,7 +43,7 @@ class FrgDevice {
 
     VkCommandPool getCommandPool() { return commandPool; }
     VkDevice device() { return device_; }
-    VkSampler sampler() { return texture_sampler; }
+    VkSampler textureSampler() { return texture_sampler; }
     VkSurfaceKHR surface() { return surface_; }
     VkQueue graphicsQueue() { return graphicsQueue_; }
     VkQueue presentQueue() { return presentQueue_; }

@@ -21,7 +21,8 @@ FirstApp::~FirstApp() {}
 
 void FirstApp::run() {
     SimpleRenderSystem simpleRenderSystem{frgDevice,
-                                          frgRenderer.getSwapChainRenderPass()};
+                                          frgRenderer.getSwapChainRenderPass(),
+                                          frgDescriptor};
     FrgCamera camera{};
     // example camera setup
     camera.setViewTarget(glm::vec3{-1.f, -2.f, 2.f}, glm::vec3{0.f, 0.f, 2.5f});
@@ -106,14 +107,6 @@ std::unique_ptr<FrgModel> createCubeModel(FrgDevice &device, glm::vec3 offset) {
     return nullptr;
 }
 
-void FirstApp::loadGameObjects() {
-    // std::shared_ptr<FrgModel> cubeModel =
-    //     createCubeModel(frgDevice, {0.f, 0.f, 0.f});
-    // auto cube = FrgGameObject::createGameObject();
-    // cube.model = cubeModel;
-    //  cube.transform.translation = {0.f, 0.f, 2.5f};
-    // cube.transform.scale = {0.5f, 0.5f, 0.5f};
-    // gameObjects.push_back(std::move(cube));
-}
+void FirstApp::loadGameObjects() {}
 
 } // namespace frg
