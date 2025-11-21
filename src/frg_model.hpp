@@ -23,6 +23,14 @@ class FrgModel {
   public:
     FrgModel(FrgDevice &device, const std::string &path);
     void draw(VkCommandBuffer command_buffer);
+    uint32_t vertex_count() {
+        uint32_t v_count = 0;
+        for (const auto &mesh : meshes) {
+            v_count += mesh->vertices.size();
+        }
+
+        return v_count;
+    }
 
   private:
     std::vector<std::unique_ptr<FrgMesh>> meshes;

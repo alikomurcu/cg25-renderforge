@@ -487,9 +487,9 @@ void FrgDevice::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
     allocInfo.memoryTypeIndex =
         findMemoryType(memRequirements.memoryTypeBits, properties);
 
-    if (vkAllocateMemory(device_, &allocInfo, nullptr, &bufferMemory) !=
-        VK_SUCCESS)
-    {
+    VkResult res =
+        vkAllocateMemory(device_, &allocInfo, nullptr, &bufferMemory);
+    if (res != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate vertex buffer memory!");
     }
 

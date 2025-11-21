@@ -54,9 +54,11 @@ std::unique_ptr<FrgMesh> FrgModel::process_mesh(aiMesh *mesh,
         vector.y = mesh->mVertices[i].y;
         vector.z = mesh->mVertices[i].z;
         vertex.position = vector;
-        vector.x = mesh->mNormals[i].x;
-        vector.y = mesh->mNormals[i].y;
-        vector.z = mesh->mNormals[i].z;
+        if ((mesh->mNormals != nullptr)) {
+            vector.x = mesh->mNormals[i].x;
+            vector.y = mesh->mNormals[i].y;
+            vector.z = mesh->mNormals[i].z;
+        }
         vertex.normal = vector;
 
         if (mesh->mTextureCoords[0]) {

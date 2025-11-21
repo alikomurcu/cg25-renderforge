@@ -12,6 +12,7 @@
 // std
 #include <array>
 #include <cassert>
+#include <iostream>
 #include <stdexcept>
 
 namespace frg {
@@ -108,11 +109,12 @@ std::unique_ptr<FrgModel> createCubeModel(FrgDevice &device, glm::vec3 offset) {
 }
 
 void FirstApp::loadGameObjects() {
-    std::string file_path = "../resources/models/stanford_bunny.obj";
+    std::string file_path = "../resources/models/stanford_dragon.obj";
     auto g_obj = FrgGameObject::createGameObject();
     g_obj.model = std::make_shared<FrgModel>(frgDevice, file_path);
-    g_obj.transform.scale = glm::vec3{5.f, 5.f, 5.f};
-    g_obj.transform.rotation.x = glm::pi<float>();
+    std::cout << "# of vertices: " << g_obj.model->vertex_count() << std::endl;
+    g_obj.transform.scale = glm::vec3{.01f, .01f, .01f};
+    g_obj.transform.rotation.x = glm::pi<float>() / 2.0f;
     gameObjects.emplace_back(std::move(g_obj));
 }
 } // namespace frg

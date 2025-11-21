@@ -210,23 +210,39 @@ FrgMesh::FrgMesh(FrgDevice &device, const std::vector<Vertex> &vertices,
 FrgMesh::~FrgMesh() {
     vkDestroyBuffer(frg_device.device(), vertex_buffer, nullptr);
     vkFreeMemory(frg_device.device(), vertex_buffer_memory, nullptr);
+
+    if (indices.empty())
+        return;
+
     vkDestroyBuffer(frg_device.device(), index_buffer, nullptr);
     vkFreeMemory(frg_device.device(), index_buffer_memory, nullptr);
 }
 
 void FrgMesh::draw(VkCommandBuffer command_buffer) {
-    vkCmdDrawIndexed(command_buffer,
-                     static_cast<uint32_t>(indices.size()),
-                     1,
-                     0,
-                     0,
-                     0);
+    if (indices.empty()) {
+        vkCmdDraw(command_buffer,
+                  static_cast<uint32_t>(vertices.size()),
+                  1,
+                  0,
+                  0);
+    } else {
+        vkCmdDrawIndexed(command_buffer,
+                         static_cast<uint32_t>(indices.size()),
+                         1,
+                         0,
+                         0,
+                         0);
+    }
 }
 void FrgMesh::bind(VkCommandBuffer command_buffer) {
     VkBuffer buffers[] = {vertex_buffer};
     VkDeviceSize offsets[] = {0};
     vkCmdBindVertexBuffers(command_buffer, 0, 1, buffers, offsets);
-    vkCmdBindIndexBuffer(command_buffer, index_buffer, 0, VK_INDEX_TYPE_UINT32);
+    if (!indices.empty())
+        vkCmdBindIndexBuffer(command_buffer,
+                             index_buffer,
+                             0,
+                             VK_INDEX_TYPE_UINT32);
 }
 
 void FrgMesh::create_texture_image(const std::string &path_to_file,
@@ -237,7 +253,8 @@ void FrgMesh::create_texture_image(const std::string &path_to_file,
 
 void FrgMesh::setup_mesh() {
     create_vertex_buffer(vertex_buffer, vertex_buffer_memory);
-    create_index_buffer(index_buffer, index_buffer_memory);
+    if (!indices.empty())
+        create_index_buffer(index_buffer, index_buffer_memory);
 }
 
 void FrgMesh::create_vertex_buffer(VkBuffer &buffer,

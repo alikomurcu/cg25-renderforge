@@ -28,7 +28,7 @@ class FrgDescriptor {
     void create_descriptor_set_layout_binding();
     void create_descriptor_pool();
     void create_descriptor_sets();
-    const uint32_t DEFAULT_POOL_SIZE_INCR = 64;
+    const uint32_t DEFAULT_POOL_SIZE_INCR = 256;
     uint32_t texture_descriptor_size = DEFAULT_POOL_SIZE_INCR;
     uint32_t texture_count = 0;
     FrgDevice &frg_device;
