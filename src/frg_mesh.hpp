@@ -55,7 +55,10 @@ class FrgMesh {
             const std::vector<unsigned int> &indices,
             std::vector<std::unique_ptr<Texture>> textures);
     ~FrgMesh();
-    void draw() const;
+
+    void draw(VkCommandBuffer command_buffer);
+    void bind(VkCommandBuffer command_buffer);
+
     FrgMesh(const FrgMesh &) = delete;
     FrgMesh &operator=(const FrgMesh &) = delete;
 

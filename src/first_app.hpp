@@ -28,7 +28,7 @@ class FirstApp {
   private:
     void loadGameObjects();
 
-    FrgWindow frgWindow{WIDTH, HEIGHT, "MERHABA VULKAN!"};
+    FrgWindow frgWindow{WIDTH, HEIGHT, "RenderForge"};
     FrgDevice frgDevice{frgWindow};
     FrgDescriptor frgDescriptor{frgDevice};
     FrgRenderer frgRenderer{frgWindow, frgDevice};

@@ -25,7 +25,7 @@ void FirstApp::run() {
                                           frgDescriptor};
     FrgCamera camera{};
     // example camera setup
-    camera.setViewTarget(glm::vec3{-1.f, -2.f, 2.f}, glm::vec3{0.f, 0.f, 2.5f});
+    camera.setViewTarget(glm::vec3{0.f, 0.f, -2.f}, glm::vec3{0.f, 0.f, 2.5f});
 
     while (!frgWindow.shouldClose()) {
         glfwPollEvents();
@@ -107,6 +107,11 @@ std::unique_ptr<FrgModel> createCubeModel(FrgDevice &device, glm::vec3 offset) {
     return nullptr;
 }
 
-void FirstApp::loadGameObjects() {}
-
+void FirstApp::loadGameObjects() {
+    std::string file_path = "../resources/models/stanford_bunny.obj";
+    auto g_obj = FrgGameObject::createGameObject();
+    g_obj.model = std::make_shared<FrgModel>(frgDevice, file_path);
+    g_obj.transform.translation = {0.f, 0.f, 2.5f};
+    gameObjects.emplace_back(std::move(g_obj));
+}
 } // namespace frg

@@ -90,7 +90,7 @@ void SimpleRenderSystem::renderGameObjects(
                            sizeof(SimplePushConstantData),
                            &push);
         vkCmdBindDescriptorSets(commandBuffer,
-                                VK_SHADER_STAGE_FRAGMENT_BIT,
+                                VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 pipelineLayout,
                                 0,
                                 frgDescriptor.descriptorSetCount(),

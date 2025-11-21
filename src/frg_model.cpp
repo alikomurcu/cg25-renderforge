@@ -5,19 +5,18 @@ FrgModel::FrgModel(FrgDevice &device, const std::string &path)
     : frg_device(device) {
     load_model(path);
 }
-
-void FrgModel::draw() {
+void FrgModel::draw(VkCommandBuffer command_buffer) {
     for (const auto &mesh : meshes) {
-        mesh->draw();
+        mesh->bind(command_buffer);
+        mesh->draw(command_buffer);
     }
 }
 
 void FrgModel::load_model(const std::string &path) {
     Assimp::Importer importer;
-    const aiScene *scene =
-        importer.ReadFile(path,
-                          aiProcess_Triangulate | aiProcess_SortByPType |
-                              aiProcess_JoinIdenticalVertices);
+    const aiScene *scene = importer.ReadFile(
+        path,
+        aiProcess_Triangulate | aiProcess_SortByPType | aiProcess_GenNormals);
 
     if (scene == nullptr || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
         !scene->mRootNode)

@@ -22,7 +22,7 @@ namespace frg {
 class FrgModel {
   public:
     FrgModel(FrgDevice &device, const std::string &path);
-    void draw();
+    void draw(VkCommandBuffer command_buffer);
 
   private:
     std::vector<std::unique_ptr<FrgMesh>> meshes;

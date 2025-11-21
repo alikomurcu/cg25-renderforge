@@ -212,7 +212,14 @@ FrgMesh::~FrgMesh() {
     vkFreeMemory(frg_device.device(), vertex_buffer_memory, nullptr);
 }
 
-void FrgMesh::draw() const {}
+void FrgMesh::draw(VkCommandBuffer command_buffer) {
+    vkCmdDraw(command_buffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+}
+void FrgMesh::bind(VkCommandBuffer command_buffer) {
+    VkBuffer buffers[] = {vertex_buffer};
+    VkDeviceSize offsets[] = {0};
+    vkCmdBindVertexBuffers(command_buffer, 0, 1, buffers, offsets);
+}
 
 void FrgMesh::create_texture_image(const std::string &path_to_file,
                                    const std::string &type) {

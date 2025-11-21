@@ -1,7 +1,11 @@
 #include "frg_descriptor.hpp"
 
 namespace frg {
-FrgDescriptor::FrgDescriptor(FrgDevice &device) : frg_device{device} {}
+FrgDescriptor::FrgDescriptor(FrgDevice &device) : frg_device{device} {
+    create_descriptor_set_layout_binding();
+    create_descriptor_pool();
+    create_descriptor_sets();
+}
 FrgDescriptor::~FrgDescriptor() {
     vkDestroyDescriptorPool(frg_device.device(), descriptor_pool, nullptr);
     vkDestroyDescriptorSetLayout(frg_device.device(),
@@ -25,8 +29,9 @@ void FrgDescriptor::create_descriptor_set_layout_binding() {
     image_array_binding.pImmutableSamplers = nullptr;
     image_array_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-    std::array<VkDescriptorSetLayoutBinding, 1> bindings = {
-        sampler_layout_binding};
+    std::array<VkDescriptorSetLayoutBinding, 2> bindings = {
+        sampler_layout_binding,
+        image_array_binding};
 
     VkDescriptorSetLayoutCreateInfo layout_info{};
     layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -43,15 +48,18 @@ void FrgDescriptor::create_descriptor_set_layout_binding() {
 }
 
 void FrgDescriptor::create_descriptor_pool() {
-    VkDescriptorPoolSize pool_size{};
-    pool_size.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    pool_size.descriptorCount = texture_descriptor_size;
+    std::array<VkDescriptorPoolSize, 2> pool_sizes;
+    pool_sizes[0] = {};
+    pool_sizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    pool_sizes[0].descriptorCount = 1;
+    pool_sizes[1].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+    pool_sizes[1].descriptorCount = texture_descriptor_size;
 
     VkDescriptorPoolCreateInfo pool_info{};
     pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    pool_info.poolSizeCount = 1;
-    pool_info.pPoolSizes = &pool_size;
-    pool_info.maxSets = texture_descriptor_size;
+    pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
+    pool_info.pPoolSizes = pool_sizes.data();
+    pool_info.maxSets = texture_descriptor_size + 1;
 
     if (vkCreateDescriptorPool(frg_device.device(),
                                &pool_info,
