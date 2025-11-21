@@ -111,7 +111,8 @@ void FirstApp::loadGameObjects() {
     std::string file_path = "../resources/models/stanford_bunny.obj";
     auto g_obj = FrgGameObject::createGameObject();
     g_obj.model = std::make_shared<FrgModel>(frgDevice, file_path);
-    g_obj.transform.translation = {0.f, 0.f, 2.5f};
+    g_obj.transform.scale = glm::vec3{5.f, 5.f, 5.f};
+    g_obj.transform.rotation.x = glm::pi<float>();
     gameObjects.emplace_back(std::move(g_obj));
 }
 } // namespace frg

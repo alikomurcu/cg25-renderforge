@@ -210,15 +210,23 @@ FrgMesh::FrgMesh(FrgDevice &device, const std::vector<Vertex> &vertices,
 FrgMesh::~FrgMesh() {
     vkDestroyBuffer(frg_device.device(), vertex_buffer, nullptr);
     vkFreeMemory(frg_device.device(), vertex_buffer_memory, nullptr);
+    vkDestroyBuffer(frg_device.device(), index_buffer, nullptr);
+    vkFreeMemory(frg_device.device(), index_buffer_memory, nullptr);
 }
 
 void FrgMesh::draw(VkCommandBuffer command_buffer) {
-    vkCmdDraw(command_buffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+    vkCmdDrawIndexed(command_buffer,
+                     static_cast<uint32_t>(indices.size()),
+                     1,
+                     0,
+                     0,
+                     0);
 }
 void FrgMesh::bind(VkCommandBuffer command_buffer) {
     VkBuffer buffers[] = {vertex_buffer};
     VkDeviceSize offsets[] = {0};
     vkCmdBindVertexBuffers(command_buffer, 0, 1, buffers, offsets);
+    vkCmdBindIndexBuffer(command_buffer, index_buffer, 0, VK_INDEX_TYPE_UINT32);
 }
 
 void FrgMesh::create_texture_image(const std::string &path_to_file,
@@ -228,14 +236,20 @@ void FrgMesh::create_texture_image(const std::string &path_to_file,
 }
 
 void FrgMesh::setup_mesh() {
+    create_vertex_buffer(vertex_buffer, vertex_buffer_memory);
+    create_index_buffer(index_buffer, index_buffer_memory);
+}
+
+void FrgMesh::create_vertex_buffer(VkBuffer &buffer,
+                                   VkDeviceMemory &buffer_memory) {
     uint32_t vertex_count = static_cast<uint32_t>(vertices.size());
     VkDeviceSize buffer_size = sizeof(vertices[0]) * vertex_count;
     frg_device.createBuffer(buffer_size,
                             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                                 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                            vertex_buffer,
-                            vertex_buffer_memory);
+                            buffer,
+                            buffer_memory);
 
     void *data;
     vkMapMemory(frg_device.device(),
@@ -246,6 +260,36 @@ void FrgMesh::setup_mesh() {
                 &data);
     memcpy(data, vertices.data(), static_cast<size_t>(buffer_size));
     vkUnmapMemory(frg_device.device(), vertex_buffer_memory);
+}
+
+void FrgMesh::create_index_buffer(VkBuffer &buffer,
+                                  VkDeviceMemory &buffer_memory) {
+    VkDeviceSize buffer_size = sizeof(indices[0]) * indices.size();
+
+    VkBuffer staging_buffer;
+    VkDeviceMemory staging_memory;
+    frg_device.createBuffer(buffer_size,
+                            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT |
+                                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+                            staging_buffer,
+                            staging_memory);
+    void *data;
+    vkMapMemory(frg_device.device(), staging_memory, 0, buffer_size, 0, &data);
+    memcpy(data, indices.data(), static_cast<size_t>(buffer_size));
+    vkUnmapMemory(frg_device.device(), staging_memory);
+
+    frg_device.createBuffer(buffer_size,
+                            VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+                                VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                            index_buffer,
+                            index_buffer_memory);
+
+    frg_device.copyBuffer(staging_buffer, index_buffer, buffer_size);
+
+    vkDestroyBuffer(frg_device.device(), staging_buffer, nullptr);
+    vkFreeMemory(frg_device.device(), staging_memory, nullptr);
 }
 
 } // namespace frg

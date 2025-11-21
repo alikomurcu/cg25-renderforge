@@ -49,7 +49,7 @@ class Texture {
 class FrgMesh {
   public:
     std::vector<Vertex> vertices;
-    std::vector<unsigned int> indices;
+    std::vector<uint32_t> indices;
     std::vector<std::unique_ptr<Texture>> textures;
     FrgMesh(FrgDevice &device, const std::vector<Vertex> &vertices,
             const std::vector<unsigned int> &indices,
@@ -69,6 +69,11 @@ class FrgMesh {
     FrgDevice &frg_device;
     VkBuffer vertex_buffer;
     VkDeviceMemory vertex_buffer_memory;
+    VkBuffer index_buffer;
+    VkDeviceMemory index_buffer_memory;
+
     void setup_mesh();
+    void create_vertex_buffer(VkBuffer &buffer, VkDeviceMemory &buffer_memory);
+    void create_index_buffer(VkBuffer &buffer, VkDeviceMemory &buffer_memory);
 };
 } // namespace frg
