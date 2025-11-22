@@ -10,8 +10,10 @@
 #include <memory>
 #include <vector>
 
-namespace frg {
-class SimpleRenderSystem {
+namespace frg
+{
+  class SimpleRenderSystem
+  {
   public:
     SimpleRenderSystem(FrgDevice &device, VkRenderPass renderPass,
                        FrgDescriptor &descriptor);
@@ -21,7 +23,7 @@ class SimpleRenderSystem {
     SimpleRenderSystem &operator=(const SimpleRenderSystem &) = delete;
     void renderGameObjects(VkCommandBuffer commandBuffer,
                            std::vector<FrgGameObject> &gameObjects,
-                           const FrgCamera &camera);
+                           const FrgCamera &camera, float frameTime);
 
   private:
     void createPipelineLayout();
@@ -32,5 +34,5 @@ class SimpleRenderSystem {
 
     std::unique_ptr<FrgPipeline> frgPipeline;
     VkPipelineLayout pipelineLayout;
-};
+  };
 } // namespace frg

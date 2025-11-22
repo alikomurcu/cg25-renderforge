@@ -6,10 +6,14 @@ layout (location = 2) in vec2 tex_coord;
 
 layout (location = 0) out vec3 fragNormal;
 layout (location = 1) out vec2 frag_tex_coord;
+layout (location = 2) out vec3 fragWorldPos;
 
 layout(push_constant) uniform Push {
     mat4 transform;
     mat4 normalMat;
+    float totalTime;
+    float radius;
+    float height;
 } push;
 
 void main() {
@@ -17,4 +21,6 @@ void main() {
     // Transform normal to world space
     fragNormal = normalize(mat3(push.normalMat) * normal);
     frag_tex_coord = tex_coord;
+    // Transform position to world space
+    fragWorldPos = (push.transform * vec4(position, 1.0)).xyz;
 }

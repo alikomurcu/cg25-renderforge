@@ -17,6 +17,10 @@ namespace frg
     {
         glm::mat4 transform{1.f};
         glm::mat4 normalMat{1.f};
+        // for point light
+        float totalTime{0.f};
+        float radius{3.f};
+        float height{1.5f};
     };
 
     SimpleRenderSystem::SimpleRenderSystem(FrgDevice &device,
@@ -74,10 +78,14 @@ namespace frg
 
     void SimpleRenderSystem::renderGameObjects(
         VkCommandBuffer commandBuffer, std::vector<FrgGameObject> &gameObjects,
-        const FrgCamera &camera)
+        const FrgCamera &camera, float frameTime)
     {
         frgPipeline->bind(commandBuffer);
         auto projectionView = camera.getProjectionMatrix() * camera.getViewMatrix();
+
+        // Track total time for orbit animation
+        static float totalTime = 0.f;
+        totalTime += frameTime;
 
         for (auto &gameObject : gameObjects)
         {
@@ -85,6 +93,12 @@ namespace frg
             auto modelMat = gameObject.transform.mat4();
             push.transform = projectionView * modelMat;
             push.normalMat = gameObject.transform.normalMat();
+
+            // Pass orbit parameters to shader
+            push.totalTime = totalTime;
+            push.radius = 3.f;
+            push.height = 0.f;
+
             vkCmdPushConstants(commandBuffer,
                                pipelineLayout,
                                VK_SHADER_STAGE_VERTEX_BIT |

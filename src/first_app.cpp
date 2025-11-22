@@ -78,7 +78,8 @@ namespace frg
                 frgRenderer.beginSwapChainRenderPass(commandBuffer);
                 simpleRenderSystem.renderGameObjects(commandBuffer,
                                                      gameObjects,
-                                                     camera);
+                                                     camera,
+                                                     frameTime);
 
                 frgRenderer.endSwapChainRenderPass(commandBuffer);
                 frgRenderer.endFrame();
