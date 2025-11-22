@@ -182,6 +182,11 @@ void FrgDevice::createLogicalDevice() {
         createInfo.enabledLayerCount = 0;
     }
 
+    VkPhysicalDeviceDescriptorIndexingFeatures descriptor_indexing_features{};
+    descriptor_indexing_features.sType =
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+    descriptor_indexing_features.descriptorBindingPartiallyBound = VK_TRUE;
+    createInfo.pNext = reinterpret_cast<void *>(&descriptor_indexing_features);
     if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device_) !=
         VK_SUCCESS)
     {
@@ -292,7 +297,6 @@ std::vector<const char *> FrgDevice::getRequiredExtensions() {
 
     std::vector<const char *> extensions(glfwExtensions,
                                          glfwExtensions + glfwExtensionCount);
-
 #if defined(__APPLE__)
     extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
 #endif

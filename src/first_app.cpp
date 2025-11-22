@@ -16,9 +16,25 @@
 #include <stdexcept>
 
 namespace frg {
-FirstApp::FirstApp() { loadGameObjects(); }
+FirstApp::FirstApp() {
+    loadGameObjects();
+    frgDescriptor.write_descriptor_sets(get_descriptors_of_game_objects());
+}
 
 FirstApp::~FirstApp() {}
+
+std::vector<VkDescriptorImageInfo> FirstApp::get_descriptors_of_game_objects() {
+    std::vector<VkDescriptorImageInfo> all_descriptor_infos{};
+    for (const auto &obj : gameObjects) {
+        std::vector<VkDescriptorImageInfo> tmp_infos =
+            obj.model->get_descriptors();
+        all_descriptor_infos.insert(all_descriptor_infos.end(),
+                                    tmp_infos.begin(),
+                                    tmp_infos.end());
+    }
+
+    return all_descriptor_infos;
+}
 
 void FirstApp::run() {
     SimpleRenderSystem simpleRenderSystem{frgDevice,
@@ -26,7 +42,7 @@ void FirstApp::run() {
                                           frgDescriptor};
     FrgCamera camera{};
     // example camera setup
-    camera.setViewTarget(glm::vec3{0.f, 0.f, -2.f}, glm::vec3{0.f, 0.f, 2.5f});
+    camera.setViewTarget(glm::vec3{0.f, -.5f, -2.f}, glm::vec3{0.f, 0.f, 2.5f});
 
     while (!frgWindow.shouldClose()) {
         glfwPollEvents();
@@ -109,12 +125,18 @@ std::unique_ptr<FrgModel> createCubeModel(FrgDevice &device, glm::vec3 offset) {
 }
 
 void FirstApp::loadGameObjects() {
-    std::string file_path = "../resources/models/stanford_dragon.obj";
+    std::string file_path = "../resources/models/viking_room/viking_room.obj";
     auto g_obj = FrgGameObject::createGameObject();
     g_obj.model = std::make_shared<FrgModel>(frgDevice, file_path);
+    std::unique_ptr<Texture> tex = std::make_unique<Texture>(
+        frgDevice,
+        "texture_diffuse",
+        "../resources/models/viking_room/viking_room.png");
+    g_obj.model->add_texture_to_mesh(0, tex);
     std::cout << "# of vertices: " << g_obj.model->vertex_count() << std::endl;
-    g_obj.transform.scale = glm::vec3{.01f, .01f, .01f};
+    // g_obj.transform.scale = glm::vec3{.01f, .01f, .01f};
     g_obj.transform.rotation.x = glm::pi<float>() / 2.0f;
+    g_obj.transform.rotation.y = glm::pi<float>() / 2.0f;
     gameObjects.emplace_back(std::move(g_obj));
 }
 } // namespace frg

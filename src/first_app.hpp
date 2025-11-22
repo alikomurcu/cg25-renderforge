@@ -33,6 +33,7 @@ class FirstApp {
     FrgDescriptor frgDescriptor{frgDevice};
     FrgRenderer frgRenderer{frgWindow, frgDevice};
 
+    std::vector<VkDescriptorImageInfo> get_descriptors_of_game_objects();
     std::vector<FrgGameObject> gameObjects;
 };
 } // namespace frg

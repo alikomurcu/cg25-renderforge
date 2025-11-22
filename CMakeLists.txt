@@ -84,6 +84,7 @@ add_executable(frg
     src/frg_camera.cpp
     src/frg_mesh.cpp
     src/frg_descriptor.cpp
+    src/frg_game_object.cpp
 )
 
 # --- Shader compilation (GLSL -> SPIR-V) ---

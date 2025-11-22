@@ -16,8 +16,7 @@ FrgDescriptor::~FrgDescriptor() {
 void FrgDescriptor::create_descriptor_set_layout_binding() {
     VkDescriptorSetLayoutBinding sampler_layout_binding{};
     sampler_layout_binding.binding = 0;
-    sampler_layout_binding.descriptorType =
-        VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
     sampler_layout_binding.descriptorCount = 1;
     sampler_layout_binding.pImmutableSamplers = nullptr;
     sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -38,6 +37,17 @@ void FrgDescriptor::create_descriptor_set_layout_binding() {
     layout_info.bindingCount = static_cast<uint32_t>(bindings.size());
     layout_info.pBindings = bindings.data();
 
+    VkDescriptorBindingFlags binding_flags[] = {
+        0,
+        VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT};
+    VkDescriptorSetLayoutBindingFlagsCreateInfo layout_flags_info{};
+    layout_flags_info.sType =
+        VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
+    layout_flags_info.bindingCount = 2;
+    layout_flags_info.pBindingFlags = binding_flags;
+    layout_flags_info.pNext = nullptr;
+    layout_info.pNext = reinterpret_cast<void *>(&layout_flags_info);
+
     if (vkCreateDescriptorSetLayout(frg_device.device(),
                                     &layout_info,
                                     nullptr,
@@ -50,7 +60,7 @@ void FrgDescriptor::create_descriptor_set_layout_binding() {
 void FrgDescriptor::create_descriptor_pool() {
     std::array<VkDescriptorPoolSize, 2> pool_sizes;
     pool_sizes[0] = {};
-    pool_sizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    pool_sizes[0].type = VK_DESCRIPTOR_TYPE_SAMPLER;
     pool_sizes[0].descriptorCount = 1;
     pool_sizes[1].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
     pool_sizes[1].descriptorCount = texture_descriptor_size;
@@ -96,7 +106,7 @@ void FrgDescriptor::write_descriptor_sets(
     set_writes[0].dstSet = descriptor_set;
     set_writes[0].dstBinding = 0;
     set_writes[0].dstArrayElement = 0;
-    set_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    set_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
     set_writes[0].descriptorCount = 1;
     set_writes[0].pBufferInfo = 0;
     set_writes[0].pImageInfo = &sampler_info;
@@ -107,7 +117,7 @@ void FrgDescriptor::write_descriptor_sets(
     set_writes[1].dstBinding = 1;
     set_writes[1].dstArrayElement = 0;
     set_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-    set_writes[1].descriptorCount = texture_descriptor_size;
+    set_writes[1].descriptorCount = static_cast<uint32_t>(image_infos.size());
     set_writes[1].pBufferInfo = 0;
     set_writes[1].pImageInfo = image_infos.data();
 

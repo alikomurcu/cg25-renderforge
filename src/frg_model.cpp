@@ -116,4 +116,28 @@ std::vector<std::unique_ptr<Texture>>
     return textures;
 }
 
+std::vector<VkDescriptorImageInfo> FrgModel::get_descriptors() {
+    std::vector<VkDescriptorImageInfo> descriptor_infos{};
+    for (const auto &mesh : meshes) {
+        for (const auto &texture : mesh->textures) {
+            descriptor_infos.emplace_back(texture->descriptor_image_info);
+        }
+    }
+
+    return descriptor_infos;
+}
+
+// Beware that this function takes ownership of the texture pointer passed in as
+// argument
+void FrgModel::add_texture_to_mesh(size_t idx,
+                                   std::unique_ptr<Texture> &texture) {
+    if (idx >= meshes.size()) {
+        std::cerr << "Index is larger than there are number of meshes."
+                  << std::endl;
+        return;
+    }
+
+    meshes[idx]->textures.emplace_back(std::move(texture));
+}
+
 } // namespace frg

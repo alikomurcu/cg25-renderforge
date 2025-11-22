@@ -59,6 +59,7 @@ class FrgGameObject {
     FrgGameObject &operator=(FrgGameObject &&) = default;
 
     id_t getId() const { return id; }
+    std::vector<VkDescriptorImageInfo> get_descriptors();
 
     std::shared_ptr<FrgModel> model{};
     glm::vec3 color{0.0f, 0.0f, 0.0f};

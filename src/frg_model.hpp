@@ -13,6 +13,7 @@
 #include "assimp/scene.h"
 
 // std
+#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -31,6 +32,9 @@ class FrgModel {
 
         return v_count;
     }
+
+    void add_texture_to_mesh(size_t idx, std::unique_ptr<Texture> &texture);
+    std::vector<VkDescriptorImageInfo> get_descriptors();
 
   private:
     std::vector<std::unique_ptr<FrgMesh>> meshes;

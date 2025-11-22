@@ -38,13 +38,14 @@ class Texture {
     std::string type;
     std::string path;
 
+    VkDescriptorImageInfo descriptor_image_info;
+
   private:
     void create_descriptor_image_info();
     FrgDevice &device;
     VkImage texture_image;
     VkDeviceMemory texture_image_memory;
     VkImageView texture_image_view;
-    VkDescriptorImageInfo descriptor_image_info;
 };
 class FrgMesh {
   public:
