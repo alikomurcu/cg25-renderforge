@@ -1,44 +1,51 @@
 #pragma once
 
 #include "frg_device.hpp"
+#include "frg_mesh.hpp"
 
 // libs
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
+#include "assimp/Importer.hpp"
+#include "assimp/postprocess.h"
+#include "assimp/scene.h"
+
 // std
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
-namespace frg
-{
-    class FrgModel
-    {
-    public:
-        struct Vertex
-        {
-            glm::vec3 position;
-            glm::vec3 color;
-            static std::vector<VkVertexInputBindingDescription> getBindingDescriptions();
-            static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
-        };
+namespace frg {
+class FrgModel {
+  public:
+    FrgModel(FrgDevice &device, const std::string &path);
+    void draw(VkCommandBuffer command_buffer);
+    uint32_t vertex_count() {
+        uint32_t v_count = 0;
+        for (const auto &mesh : meshes) {
+            v_count += mesh->vertices.size();
+        }
 
-        FrgModel(
-            FrgDevice &device,
-            const std::vector<Vertex> &vertices);
-        ~FrgModel();
+        return v_count;
+    }
 
-        FrgModel(const FrgModel &) = delete;
-        FrgModel &operator=(const FrgModel &) = delete;
+    void add_texture_to_mesh(size_t idx, std::unique_ptr<Texture> &texture);
+    std::vector<VkDescriptorImageInfo> get_descriptors();
 
-        void bind(VkCommandBuffer commandBuffer);
-        void draw(VkCommandBuffer commandBuffer);
+  private:
+    std::vector<std::unique_ptr<FrgMesh>> meshes;
+    std::string dir;
+    FrgDevice &frg_device;
 
-    private:
-        void createVertexBuffers(const std::vector<Vertex> &vertices);
-        FrgDevice &frgDevice;
-        VkBuffer vertexBuffer;
-        VkDeviceMemory vertexBufferMemory;
-        uint32_t vertexCount;
-    };
+    void load_model(const std::string &path);
+    void process_node(aiNode *node, const aiScene *scene);
+    std::unique_ptr<FrgMesh> process_mesh(aiMesh *mesh, const aiScene *scene);
+    std::vector<std::unique_ptr<Texture>>
+        load_material_textures(aiMaterial *mat, aiTextureType type,
+                               std::string type_name);
+};
 } // namespace frg

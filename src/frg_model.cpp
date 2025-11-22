@@ -1,74 +1,143 @@
 #include "frg_model.hpp"
 
-// std
-#include <cassert>
-#include <cstring>
+namespace frg {
+FrgModel::FrgModel(FrgDevice &device, const std::string &path)
+    : frg_device(device) {
+    load_model(path);
+}
+void FrgModel::draw(VkCommandBuffer command_buffer) {
+    for (const auto &mesh : meshes) {
+        mesh->bind(command_buffer);
+        mesh->draw(command_buffer);
+    }
+}
 
-namespace frg
-{
+void FrgModel::load_model(const std::string &path) {
+    Assimp::Importer importer;
+    const aiScene *scene =
+        importer.ReadFile(path,
+                          aiProcess_Triangulate | aiProcess_SortByPType |
+                              aiProcess_GenNormals | aiProcess_FlipUVs);
 
-    FrgModel::FrgModel(FrgDevice &device, const std::vector<Vertex> &vertices) : frgDevice{device}
+    if (scene == nullptr || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
+        !scene->mRootNode)
     {
-        createVertexBuffers(vertices);
+        throw std::runtime_error(importer.GetErrorString());
     }
 
-    FrgModel::~FrgModel()
-    {
-        vkDestroyBuffer(frgDevice.device(), vertexBuffer, nullptr);
-        vkFreeMemory(frgDevice.device(), vertexBufferMemory, nullptr);
+    dir = path.substr(0, path.find_last_of('/'));
+
+    process_node(scene->mRootNode, scene);
+}
+
+void FrgModel::process_node(aiNode *node, const aiScene *scene) {
+    for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
+        aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
+        meshes.emplace_back(process_mesh(mesh, scene));
     }
 
-    void FrgModel::createVertexBuffers(const std::vector<Vertex> &vertices)
-    {
-        vertexCount = static_cast<uint32_t>(vertices.size());
-        assert(vertexCount >= 3 && "Vertex count must be at least 3");
-        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertexCount;
-        frgDevice.createBuffer(
-            bufferSize,
-            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            vertexBuffer,
-            vertexBufferMemory);
+    for (unsigned int i = 0; i < node->mNumChildren; ++i) {
+        process_node(node->mChildren[i], scene);
+    }
+}
 
-        void *data;
-        vkMapMemory(frgDevice.device(), vertexBufferMemory, 0, bufferSize, 0, &data);
-        memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-        vkUnmapMemory(frgDevice.device(), vertexBufferMemory);
+std::unique_ptr<FrgMesh> FrgModel::process_mesh(aiMesh *mesh,
+                                                const aiScene *scene) {
+    std::vector<Vertex> vertices;
+    std::vector<std::unique_ptr<Texture>> textures;
+    std::vector<unsigned int> indices;
+
+    glm::vec3 vector;
+    for (unsigned int i = 0; i < mesh->mNumVertices; ++i) {
+        Vertex vertex;
+        vector.x = mesh->mVertices[i].x;
+        vector.y = mesh->mVertices[i].y;
+        vector.z = mesh->mVertices[i].z;
+        vertex.position = vector;
+        if ((mesh->mNormals != nullptr)) {
+            vector.x = mesh->mNormals[i].x;
+            vector.y = mesh->mNormals[i].y;
+            vector.z = mesh->mNormals[i].z;
+        }
+        vertex.normal = vector;
+
+        if (mesh->mTextureCoords[0]) {
+            glm::vec2 vec;
+            vec.x = mesh->mTextureCoords[0][i].x;
+            vec.y = mesh->mTextureCoords[0][i].y;
+            vertex.tex_coord = vec;
+        } else
+            vertex.tex_coord = {0.0f, 0.0f};
+
+        vertices.emplace_back(vertex);
     }
 
-    void FrgModel::bind(VkCommandBuffer commandBuffer)
-    {
-        VkBuffer buffers[] = {vertexBuffer};
-        VkDeviceSize offsets[] = {0};
-        vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
+    for (unsigned int i = 0; i < mesh->mNumFaces; ++i) {
+        aiFace face = mesh->mFaces[i];
+        for (unsigned int j = 0; j < face.mNumIndices; ++j) {
+            indices.push_back(face.mIndices[j]);
+        }
     }
 
-    void FrgModel::draw(VkCommandBuffer commandBuffer)
-    {
-        vkCmdDraw(commandBuffer, vertexCount, 1, 0, 0);
+    if (mesh->mMaterialIndex >= 0) {
+        aiMaterial *mat = scene->mMaterials[mesh->mMaterialIndex];
+        std::vector<std::unique_ptr<Texture>> diffuse_maps =
+            load_material_textures(mat,
+                                   aiTextureType_DIFFUSE,
+                                   "texture_diffuse");
+        textures.insert(textures.end(),
+                        std::make_move_iterator(diffuse_maps.begin()),
+                        std::make_move_iterator(diffuse_maps.end()));
+        std::vector<std::unique_ptr<Texture>> specular_maps =
+            load_material_textures(mat,
+                                   aiTextureType_SPECULAR,
+                                   "texture_specular");
+        textures.insert(textures.end(),
+                        std::make_move_iterator(specular_maps.begin()),
+                        std::make_move_iterator(specular_maps.end()));
     }
 
-    std::vector<VkVertexInputBindingDescription> FrgModel::Vertex::getBindingDescriptions()
-    {
-        std::vector<VkVertexInputBindingDescription> bindingDescriptions(1);
-        bindingDescriptions[0].binding = 0;
-        bindingDescriptions[0].stride = sizeof(Vertex);
-        bindingDescriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-        return bindingDescriptions;
+    return std::make_unique<FrgMesh>(frg_device,
+                                     vertices,
+                                     indices,
+                                     std::move(textures));
+}
+
+std::vector<std::unique_ptr<Texture>>
+    FrgModel::load_material_textures(aiMaterial *mat, aiTextureType type,
+                                     std::string type_name) {
+    std::vector<std::unique_ptr<Texture>> textures;
+    for (unsigned int i = 0; i < mat->GetTextureCount(type); ++i) {
+        aiString str;
+        mat->GetTexture(type, i, &str);
+        textures.emplace_back(
+            std::make_unique<Texture>(frg_device, type_name, str.C_Str()));
+    }
+    return textures;
+}
+
+std::vector<VkDescriptorImageInfo> FrgModel::get_descriptors() {
+    std::vector<VkDescriptorImageInfo> descriptor_infos{};
+    for (const auto &mesh : meshes) {
+        for (const auto &texture : mesh->textures) {
+            descriptor_infos.emplace_back(texture->descriptor_image_info);
+        }
     }
 
-    std::vector<VkVertexInputAttributeDescription> FrgModel::Vertex::getAttributeDescriptions()
-    {
-        std::vector<VkVertexInputAttributeDescription> attributeDescriptions(2);
-        attributeDescriptions[0].binding = 0;
-        attributeDescriptions[0].location = 0;
-        attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[0].offset = offsetof(Vertex, position);
+    return descriptor_infos;
+}
 
-        attributeDescriptions[1].binding = 0;
-        attributeDescriptions[1].location = 1;
-        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[1].offset = offsetof(Vertex, color);
-        return attributeDescriptions;
+// Beware that this function takes ownership of the texture pointer passed in as
+// argument
+void FrgModel::add_texture_to_mesh(size_t idx,
+                                   std::unique_ptr<Texture> &texture) {
+    if (idx >= meshes.size()) {
+        std::cerr << "Index is larger than there are number of meshes."
+                  << std::endl;
+        return;
     }
+
+    meshes[idx]->textures.emplace_back(std::move(texture));
+}
+
 } // namespace frg
