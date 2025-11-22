@@ -1,5 +1,6 @@
 #include "first_app.hpp"
 
+#include "keyboard_movement_controller.hpp"
 #include "frg_camera.hpp"
 #include "simple_render_system.hpp"
 
@@ -10,6 +11,8 @@
 #include <glm/gtc/constants.hpp>
 
 // std
+#include <stdexcept>
+#include <chrono>
 #include <array>
 #include <cassert>
 #include <iostream>
