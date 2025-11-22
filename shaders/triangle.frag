@@ -14,6 +14,8 @@ layout(push_constant) uniform Push {
     mat4 normalMat;
     vec4 pointLightPosition;
     vec4 pointLightColor;  // w component is intensity
+    int texture_idx;
+    bool has_texture;
 } push;
 
 const float AMBIENT_LIGHT = 0.02;
@@ -37,8 +39,11 @@ vec3 calculatePointLight(vec3 lightPos, vec3 lightColor, float intensity,
 
 void main() {
     // Sample texture
-    vec3 texColor = texture(sampler2D(textures[0], tex_sampler), frag_tex_coord).rgb;
-    
+    vec3 texColor = vec3(1.0, 1.0, 1.0);
+    if(push.has_texture){
+        //texColor = vec3(1.0, 0.0, 0.0);
+        texColor = texture(sampler2D(textures[push.texture_idx], tex_sampler), frag_tex_coord).rgb;
+    }
     // Calculate point light contribution
     vec3 pointLightContrib = calculatePointLight(
         push.pointLightPosition.xyz,

@@ -94,6 +94,7 @@ Texture::Texture(FrgDevice &device, const std::string &type,
         throw std::runtime_error("failed to create texture image view!");
     }
 
+    texture_idx = LoadedTextures::assign_texture_idx(path);
     create_descriptor_image_info();
 }
 
@@ -163,6 +164,14 @@ Texture::~Texture() {
     vkDestroyImageView(device.device(), texture_image_view, nullptr);
     vkDestroyImage(device.device(), texture_image, nullptr);
     vkFreeMemory(device.device(), texture_image_memory, nullptr);
+}
+
+uint32_t LoadedTextures::assign_texture_idx(const std::string &path) {
+    if (loaded_texture_names.find(path) != loaded_texture_names.end()) {
+        return loaded_texture_names[path];
+    }
+    loaded_texture_names.insert({path, texture_cntr++});
+    return loaded_texture_names[path];
 }
 
 std::vector<VkVertexInputBindingDescription>

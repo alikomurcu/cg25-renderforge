@@ -15,15 +15,25 @@
 // std
 #include <iostream>
 #include <memory>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 namespace frg {
+struct SimplePushConstantData {
+    glm::mat4 transform{1.f};
+    glm::mat4 normalMat{1.f};
+    glm::vec4 pointLightPosition{0.f, 0.f, 0.f, 1.f};
+    glm::vec4 pointLightColor{1.f, 1.f, 1.f, 1.f}; // w is intensity
+    int texture_idx;
+    bool has_texture;
+};
 class FrgModel {
   public:
     FrgModel(FrgDevice &device, const std::string &path);
-    void draw(VkCommandBuffer command_buffer);
+    void draw(VkCommandBuffer command_buffer, VkPipelineLayout pipeline_layout,
+              SimplePushConstantData push);
     uint32_t vertex_count() {
         uint32_t v_count = 0;
         for (const auto &mesh : meshes) {
