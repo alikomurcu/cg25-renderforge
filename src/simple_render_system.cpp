@@ -17,10 +17,8 @@ namespace frg
     {
         glm::mat4 transform{1.f};
         glm::mat4 normalMat{1.f};
-        // for point light
-        float totalTime{0.f};
-        float radius{3.f};
-        float height{1.5f};
+        glm::vec4 pointLightPosition{0.f, 0.f, 0.f, 1.f};
+        glm::vec4 pointLightColor{1.f, 1.f, 1.f, 1.f}; // w is intensity
     };
 
     SimpleRenderSystem::SimpleRenderSystem(FrgDevice &device,
@@ -87,6 +85,20 @@ namespace frg
         static float totalTime = 0.f;
         totalTime += frameTime;
 
+        // Update light position based on orbit animation
+        float angle = totalTime * glm::radians(90.0f); // 90 degrees per second
+        float radius = 3.0f;
+        glm::vec3 lightPos = glm::vec3(
+            radius * glm::cos(angle),
+            1.5f,
+            radius * glm::sin(angle));
+
+        // Update the light manager with the orbiting point light
+        if (light_manager.getPointLightCount() > 0)
+        {
+            light_manager.updatePointLight(0, lightPos);
+        }
+
         for (auto &gameObject : gameObjects)
         {
             SimplePushConstantData push{};
@@ -94,10 +106,13 @@ namespace frg
             push.transform = projectionView * modelMat;
             push.normalMat = gameObject.transform.normalMat();
 
-            // Pass orbit parameters to shader
-            push.totalTime = totalTime;
-            push.radius = 3.f;
-            push.height = 0.f;
+            // Get light data from manager
+            LightData lightData = light_manager.getLightData();
+            if (lightData.pointLightCount > 0)
+            {
+                push.pointLightPosition = lightData.pointLights[0].position;
+                push.pointLightColor = lightData.pointLights[0].color;
+            }
 
             vkCmdPushConstants(commandBuffer,
                                pipelineLayout,

@@ -55,6 +55,13 @@ namespace frg
         KeyboardMovementController cameraController;
 
         auto curTime = std::chrono::high_resolution_clock::now();
+
+        // Add a point light to the scene
+        simpleRenderSystem.getLightManager().addPointLight(
+            glm::vec3(0.f, 0.f, 0.f),
+            glm::vec3(1.f, 1.f, 1.f),
+            1.f,
+            3.f);
         while (!frgWindow.shouldClose())
         {
             glfwPollEvents();

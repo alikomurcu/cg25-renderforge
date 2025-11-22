@@ -11,9 +11,8 @@ layout (location = 2) out vec3 fragWorldPos;
 layout(push_constant) uniform Push {
     mat4 transform;
     mat4 normalMat;
-    float totalTime;
-    float radius;
-    float height;
+    vec4 pointLightPosition;
+    vec4 pointLightColor;  // w component is intensity
 } push;
 
 void main() {

@@ -12,40 +12,46 @@ layout (location=0) out vec4 outColor;
 layout(push_constant) uniform Push {
     mat4 transform;
     mat4 normalMat;
-    float totalTime;
-    float radius;
-    float height;
+    vec4 pointLightPosition;
+    vec4 pointLightColor;  // w component is intensity
 } push;
 
-const vec3 LIGHT_COLOR = vec3(1.0, 1.0, 1.0);
 const float AMBIENT_LIGHT = 0.02;
-const float ORBIT_SPEED = 90.0; // degrees per second
 
-void main() {
-    // Calculate orbiting point light position in shader
-    float angle = push.totalTime * radians(ORBIT_SPEED);
-    vec3 pointLightPos = vec3(
-        push.radius * cos(angle),
-        push.height,
-        push.radius * sin(angle)
-    );
-    
+// Calculate point light contribution
+vec3 calculatePointLight(vec3 lightPos, vec3 lightColor, float intensity, 
+                         vec3 normal, vec3 worldPos) {
     // Calculate direction from fragment to point light
-    vec3 lightDir = pointLightPos - fragWorldPos;
+    vec3 lightDir = lightPos - worldPos;
     float distance = length(lightDir);
     lightDir = normalize(lightDir);
     
-    // Calculate attenuation with distance
+    // Calculate attenuation with distance (quadratic falloff)
     float attenuation = 1.0 / (1.0 + 0.09 * distance + 0.032 * distance * distance);
     
     // Diffuse shading calculation for point light
-    float diffuse = max(dot(fragNormal, lightDir), 0.0);
-    float lightIntensity = AMBIENT_LIGHT + (diffuse * attenuation);
+    float diffuse = max(dot(normal, lightDir), 0.0);
     
+    return lightColor * intensity * diffuse * attenuation;
+}
+
+void main() {
     // Sample texture
     vec3 texColor = texture(sampler2D(textures[0], tex_sampler), frag_tex_coord).rgb;
     
-    // Apply diffuse lighting to texture
-    vec3 finalColor = texColor * lightIntensity * LIGHT_COLOR;
+    // Calculate point light contribution
+    vec3 pointLightContrib = calculatePointLight(
+        push.pointLightPosition.xyz,
+        push.pointLightColor.xyz,
+        push.pointLightColor.w,  // intensity from w component
+        fragNormal,
+        fragWorldPos
+    );
+    
+    // Combine ambient and point light
+    vec3 lighting = vec3(AMBIENT_LIGHT) + pointLightContrib;
+    
+    // Apply lighting to texture
+    vec3 finalColor = texColor * lighting;
     outColor = vec4(finalColor, 1.0);
 }

@@ -6,6 +6,7 @@
 #include "frg_game_object.hpp"
 #include "frg_model.hpp"
 #include "frg_pipeline.hpp"
+#include "frg_lighting.hpp"
 // std
 #include <memory>
 #include <vector>
@@ -25,12 +26,16 @@ namespace frg
                            std::vector<FrgGameObject> &gameObjects,
                            const FrgCamera &camera, float frameTime);
 
+    // Lighting interface
+    LightManager &getLightManager() { return light_manager; }
+
   private:
     void createPipelineLayout();
     void createPipeline(VkRenderPass renderPass);
 
     FrgDevice &frgDevice;
     FrgDescriptor &frgDescriptor;
+    LightManager light_manager;
 
     std::unique_ptr<FrgPipeline> frgPipeline;
     VkPipelineLayout pipelineLayout;
