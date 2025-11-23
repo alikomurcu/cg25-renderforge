@@ -95,8 +95,8 @@ void FirstApp::run() {
 
 void FirstApp::loadGameObjects() {
     std::array<std::string, 2> file_paths = {
-        "../resources/models/abandoned_car/scene.gltf",
-        "../resources/models/viking_room/viking_room.obj"};
+        "resources/models/abandoned_car/scene.gltf",
+        "resources/models/psx_garage/scene.gltf"};
 
     for (const auto &path : file_paths) {
         auto g_obj = FrgGameObject::createGameObject();
@@ -112,16 +112,11 @@ void FirstApp::loadGameObjects() {
     gameObjects[0].transform.rotation.x = glm::pi<float>();
     gameObjects[0].transform.rotation.y = glm::pi<float>() / 2.0f;
     gameObjects[0].transform.translation.z = 0.7f;
-    std::unique_ptr<Texture> tex = std::make_unique<Texture>(
-        frgDevice,
-        "texture_diffuse",
-        "../resources/models/viking_room/viking_room.png");
-    gameObjects[1].model->add_texture_to_mesh(0, tex);
     gameObjects[1].transform.translation.y = -0.2f;
     gameObjects[1].transform.translation.z = 0.7f;
 
-    gameObjects[1].transform.scale = glm::vec3{0.1f, 0.1f, 0.1f};
-    gameObjects[1].transform.rotation.x = -glm::pi<float>() / 2.0f;
-    gameObjects[1].transform.rotation.y = glm::pi<float>() / 4.0f;
+    // gameObjects[1].transform.scale = glm::vec3{0.1f, 0.1f, 0.1f};
+    gameObjects[1].transform.rotation.x = -glm::pi<float>();
+    // gameObjects[1].transform.rotation.y = glm::pi<float>() / 4.0f;
 }
 } // namespace frg

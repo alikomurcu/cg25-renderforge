@@ -126,6 +126,8 @@ install(TARGETS frg RUNTIME DESTINATION .)
 install(DIRECTORY "${SHADER_DIR}" DESTINATION .)
 
 
+
+
 # Make the headers visible to frg
 target_include_directories(frg PRIVATE
     "${CMAKE_SOURCE_DIR}/external/glm"
