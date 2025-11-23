@@ -14,6 +14,8 @@ Arrow Keys - Camera rotation
 We are using Vulkan without any framework, as we described in the Submission 1: Task Description.
 We also needed to include an additional library: the [stb library](https://github.com/nothings/stb) to actually load in the textures from the hard drive. This library was not initially included in the Submission 1.
 
+- We tested the code on NVIDIA GTX 1660 and NVIDIA Quadro T2000 GPUs.
+
 - Right now most of the core Vulkan part is implemented.
 
 - We implemented a `render system` that users can edit the rendering pipeline configurations as they want. Right now we are using a default pipeline configured for solid, opaque, double-sided triangles with depth test enabled, and viewport size is adjustable.
