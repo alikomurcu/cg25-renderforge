@@ -13,6 +13,7 @@ layout(push_constant) uniform Push {
     mat4 normalMat;
     vec4 pointLightPosition;
     vec4 pointLightColor;  // w component is intensity
+    uint textureIndex;
 } push;
 
 void main() {

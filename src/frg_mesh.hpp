@@ -52,6 +52,7 @@ class FrgMesh {
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
     std::vector<std::unique_ptr<Texture>> textures;
+    uint32_t textureIndexStart{0}; // Track the starting index of this mesh's textures
     FrgMesh(FrgDevice &device, const std::vector<Vertex> &vertices,
             const std::vector<unsigned int> &indices,
             std::vector<std::unique_ptr<Texture>> textures);

@@ -12,6 +12,14 @@ void FrgModel::draw(VkCommandBuffer command_buffer) {
     }
 }
 
+void FrgModel::drawMesh(VkCommandBuffer command_buffer, size_t mesh_idx) {
+    if (mesh_idx >= meshes.size()) {
+        return;
+    }
+    meshes[mesh_idx]->bind(command_buffer);
+    meshes[mesh_idx]->draw(command_buffer);
+}
+
 void FrgModel::load_model(const std::string &path) {
     Assimp::Importer importer;
     const aiScene *scene =
@@ -139,5 +147,23 @@ void FrgModel::add_texture_to_mesh(size_t idx,
 
     meshes[idx]->textures.emplace_back(std::move(texture));
 }
+
+void FrgModel::set_texture_index_for_mesh(size_t mesh_idx, uint32_t index) {
+    if (mesh_idx >= meshes.size()) {
+        std::cerr << "Mesh index out of bounds" << std::endl;
+        return;
+    }
+    meshes[mesh_idx]->textureIndexStart = index;
+}
+
+std::vector<uint32_t> FrgModel::get_mesh_texture_indices() const {
+    std::vector<uint32_t> indices;
+    for (const auto &mesh : meshes) {
+        indices.push_back(mesh->textureIndexStart);
+    }
+    return indices;
+}
+
+
 
 } // namespace frg

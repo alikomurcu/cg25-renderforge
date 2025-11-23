@@ -14,6 +14,7 @@ layout(push_constant) uniform Push {
     mat4 normalMat;
     vec4 pointLightPosition;
     vec4 pointLightColor;  // w component is intensity
+    uint textureIndex;
 } push;
 
 const float AMBIENT_LIGHT = 0.02;
@@ -36,8 +37,8 @@ vec3 calculatePointLight(vec3 lightPos, vec3 lightColor, float intensity,
 }
 
 void main() {
-    // Sample texture
-    vec3 texColor = texture(sampler2D(textures[0], tex_sampler), frag_tex_coord).rgb;
+    // Sample texture using the texture index from push constant
+    vec3 texColor = texture(sampler2D(textures[push.textureIndex], tex_sampler), frag_tex_coord).rgb;
     
     // Calculate point light contribution
     vec3 pointLightContrib = calculatePointLight(
@@ -50,7 +51,7 @@ void main() {
     
     // Combine ambient and point light
     vec3 lighting = vec3(AMBIENT_LIGHT) + pointLightContrib;
-    
+
     // Apply lighting to texture
     vec3 finalColor = texColor * lighting;
     outColor = vec4(finalColor, 1.0);

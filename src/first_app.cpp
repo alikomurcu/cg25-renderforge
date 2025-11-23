@@ -98,18 +98,43 @@ namespace frg
 
     void FirstApp::loadGameObjects()
     {
-        std::string file_path = "../resources/models/viking_room/viking_room.obj";
+        // add car model
+
+        std::string file_path = "../resources/models/car/source/car5/car5.obj";
         auto g_obj = FrgGameObject::createGameObject();
         g_obj.model = std::make_shared<FrgModel>(frgDevice, file_path);
-        std::unique_ptr<Texture> tex = std::make_unique<Texture>(
+
+        // Load textures from the resources/models/car/textures directory
+        std::unique_ptr<Texture> diffuse_tex = std::make_unique<Texture>(
             frgDevice,
             "texture_diffuse",
-            "../resources/models/viking_room/viking_room.png");
-        g_obj.model->add_texture_to_mesh(0, tex);
+            "../resources/models/car/textures/TexturesLights.png");
+        g_obj.model->add_texture_to_mesh(0, diffuse_tex);
+        g_obj.model->set_texture_index_for_mesh(0, globalTextureIndex);
+        globalTextureIndex++;
+
         std::cout << "# of vertices: " << g_obj.model->vertex_count() << std::endl;
-        // g_obj.transform.scale = glm::vec3{.01f, .01f, .01f};
-        g_obj.transform.rotation.x = glm::pi<float>() / 2.0f;
-        g_obj.transform.rotation.y = glm::pi<float>() / 2.0f;
+        g_obj.transform.scale = glm::vec3{.01f, .01f, .01f};
+        // g_obj.transform.rotation.x = glm::pi<float>() / 2.0f;
+        // g_obj.transform.rotation.y = glm::pi<float>() / 2.0f;
+        g_obj.transform.rotation.z = glm::pi<float>();
         gameObjects.emplace_back(std::move(g_obj));
+
+        // add ground model
+        file_path = "../resources/models/ground/ground.obj";
+        auto ground_obj = FrgGameObject::createGameObject();
+        ground_obj.model = std::make_shared<FrgModel>(frgDevice, file_path);
+
+        std::unique_ptr<Texture> ground_diffuse_tex = std::make_unique<Texture>(
+            frgDevice,
+            "texture_diffuse",
+            "../resources/models/ground/0.jpeg");
+        ground_obj.model->add_texture_to_mesh(0, ground_diffuse_tex);
+        ground_obj.model->set_texture_index_for_mesh(0, globalTextureIndex);
+        globalTextureIndex++;
+
+        std::cout << "# of vertices: " << ground_obj.model->vertex_count() << std::endl;
+        ground_obj.transform.scale = glm::vec3{0.4f, 0.4f, 0.4f};
+        gameObjects.emplace_back(std::move(ground_obj));
     }
 } // namespace frg

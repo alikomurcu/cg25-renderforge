@@ -11,8 +11,10 @@
 #include <string>
 #include <vector>
 
-namespace frg {
-class FirstApp {
+namespace frg
+{
+  class FirstApp
+  {
   public:
     static constexpr int WIDTH = 800;
     static constexpr int HEIGHT = 600;
@@ -35,5 +37,6 @@ class FirstApp {
 
     std::vector<VkDescriptorImageInfo> get_descriptors_of_game_objects();
     std::vector<FrgGameObject> gameObjects;
-};
+    uint32_t globalTextureIndex{0};
+  };
 } // namespace frg

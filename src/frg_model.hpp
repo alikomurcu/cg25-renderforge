@@ -24,6 +24,7 @@ class FrgModel {
   public:
     FrgModel(FrgDevice &device, const std::string &path);
     void draw(VkCommandBuffer command_buffer);
+    void drawMesh(VkCommandBuffer command_buffer, size_t mesh_idx);
     uint32_t vertex_count() {
         uint32_t v_count = 0;
         for (const auto &mesh : meshes) {
@@ -35,6 +36,8 @@ class FrgModel {
 
     void add_texture_to_mesh(size_t idx, std::unique_ptr<Texture> &texture);
     std::vector<VkDescriptorImageInfo> get_descriptors();
+    void set_texture_index_for_mesh(size_t mesh_idx, uint32_t index);
+    std::vector<uint32_t> get_mesh_texture_indices() const;
 
   private:
     std::vector<std::unique_ptr<FrgMesh>> meshes;

@@ -19,6 +19,7 @@ namespace frg
         glm::mat4 normalMat{1.f};
         glm::vec4 pointLightPosition{0.f, 0.f, 0.f, 1.f};
         glm::vec4 pointLightColor{1.f, 1.f, 1.f, 1.f}; // w is intensity
+        uint32_t textureIndex{0};
     };
 
     SimpleRenderSystem::SimpleRenderSystem(FrgDevice &device,
@@ -105,6 +106,7 @@ namespace frg
             auto modelMat = gameObject.transform.mat4();
             push.transform = projectionView * modelMat;
             push.normalMat = gameObject.transform.normalMat();
+            push.textureIndex = gameObject.model ? gameObject.model->get_mesh_texture_indices()[0] : 0;
 
             // Get light data from manager
             LightData lightData = light_manager.getLightData();
