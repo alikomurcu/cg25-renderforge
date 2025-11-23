@@ -9,4 +9,4 @@ Goup RenderForge:
 GPUs used:
 
 - NVIDIA GTX 1660
-- TODO
+- NVIDIA Quadro T2000
