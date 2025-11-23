@@ -4,7 +4,9 @@
 
 #include <array>
 #include <glm/glm.hpp>
+#include <map>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -23,6 +25,15 @@ struct Vertex {
         get_attribute_descriptions();
 };
 
+class LoadedTextures {
+  public:
+    static uint32_t assign_texture_idx(const std::string &path);
+
+  private:
+    inline static uint32_t texture_cntr = 0;
+    inline static std::map<std::string, uint32_t> loaded_texture_names{};
+};
+
 class Texture {
   public:
     Texture(FrgDevice &device, const std::string &type,
@@ -30,8 +41,6 @@ class Texture {
     ~Texture();
     Texture(const Texture &) = delete;
     Texture &operator=(const Texture &) = delete;
-    const VkImage &get_texture() const;
-    const VkDeviceMemory &get_texture_memory() const;
     void transition_image_layout(VkImage image, VkFormat format,
                                  VkImageLayout old_layout,
                                  VkImageLayout new_layout);
@@ -39,9 +48,13 @@ class Texture {
     std::string path;
 
     VkDescriptorImageInfo descriptor_image_info;
+    uint32_t textureIdx() { return texture_idx; }
 
   private:
     void create_descriptor_image_info();
+
+    uint32_t texture_idx;
+
     FrgDevice &device;
     VkImage texture_image;
     VkDeviceMemory texture_image_memory;
@@ -60,6 +73,11 @@ class FrgMesh {
 
     void draw(VkCommandBuffer command_buffer);
     void bind(VkCommandBuffer command_buffer);
+    std::optional<uint32_t> getTextureIndex() {
+        if (textures.empty())
+            return std::optional<uint32_t>();
+        return textures[0]->textureIdx();
+    }
 
     FrgMesh(const FrgMesh &) = delete;
     FrgMesh &operator=(const FrgMesh &) = delete;

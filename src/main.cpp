@@ -6,8 +6,8 @@
 #include <stdexcept>
 
 int main() {
-    frg::FirstApp app{};
     try {
+        frg::FirstApp app{};
         app.run();
     } catch (const std::exception &e) {
         std::cerr << e.what() << std::endl;

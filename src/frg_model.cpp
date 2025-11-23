@@ -5,8 +5,25 @@ FrgModel::FrgModel(FrgDevice &device, const std::string &path)
     : frg_device(device) {
     load_model(path);
 }
-void FrgModel::draw(VkCommandBuffer command_buffer) {
+void FrgModel::draw(VkCommandBuffer command_buffer,
+                    VkPipelineLayout pipeline_layout,
+                    SimplePushConstantData push) {
     for (const auto &mesh : meshes) {
+        std::optional<uint32_t> tex_idx = mesh->getTextureIndex();
+        if (tex_idx.has_value()) {
+            push.texture_idx = static_cast<int>(tex_idx.value());
+            push.has_texture = true;
+        } else {
+            push.has_texture = false;
+        }
+
+        vkCmdPushConstants(command_buffer,
+                           pipeline_layout,
+                           VK_SHADER_STAGE_VERTEX_BIT |
+                               VK_SHADER_STAGE_FRAGMENT_BIT,
+                           0,
+                           sizeof(SimplePushConstantData),
+                           &push);
         mesh->bind(command_buffer);
         mesh->draw(command_buffer);
     }
@@ -22,10 +39,11 @@ void FrgModel::drawMesh(VkCommandBuffer command_buffer, size_t mesh_idx) {
 
 void FrgModel::load_model(const std::string &path) {
     Assimp::Importer importer;
-    const aiScene *scene =
-        importer.ReadFile(path,
-                          aiProcess_Triangulate | aiProcess_SortByPType |
-                              aiProcess_GenNormals | aiProcess_FlipUVs);
+    const aiScene *scene = importer.ReadFile(
+        path,
+        aiProcess_Triangulate | aiProcess_SortByPType | aiProcess_GenNormals |
+            aiProcess_FlipUVs | aiProcess_PreTransformVertices |
+            aiProcess_ConvertToLeftHanded);
 
     if (scene == nullptr || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
         !scene->mRootNode)
@@ -118,17 +136,23 @@ std::vector<std::unique_ptr<Texture>>
     for (unsigned int i = 0; i < mat->GetTextureCount(type); ++i) {
         aiString str;
         mat->GetTexture(type, i, &str);
+        std::string texture_path = dir + "/" + str.C_Str();
         textures.emplace_back(
-            std::make_unique<Texture>(frg_device, type_name, str.C_Str()));
+            std::make_unique<Texture>(frg_device, type_name, texture_path));
     }
     return textures;
 }
 
 std::vector<VkDescriptorImageInfo> FrgModel::get_descriptors() {
     std::vector<VkDescriptorImageInfo> descriptor_infos{};
+    std::set<uint32_t> added_text_idx{};
     for (const auto &mesh : meshes) {
         for (const auto &texture : mesh->textures) {
+            if (added_text_idx.find(texture->textureIdx()) !=
+                added_text_idx.end())
+                continue;
             descriptor_infos.emplace_back(texture->descriptor_image_info);
+            added_text_idx.insert(texture->textureIdx());
         }
     }
 
