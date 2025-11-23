@@ -12,7 +12,7 @@ Arrow Keys - Camera rotation
 ## Development Status
 
 We are using Vulkan without any framework, as we described in the Submission 1: Task Description.
-We also needed to include an additional library: the stb library to actually load in the textures from the hard drive. This library was not initially included in the Submission 1.
+We also needed to include an additional library: the [stb library](https://github.com/nothings/stb) to actually load in the textures from the hard drive. This library was not initially included in the Submission 1.
 
 - Right now most of the core Vulkan part is implemented.
 
