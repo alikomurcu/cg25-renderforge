@@ -94,9 +94,9 @@ void FirstApp::run() {
 }
 
 void FirstApp::loadGameObjects() {
-    std::array<std::string, 2> file_paths = {
-        "resources/models/abandoned_car/scene.gltf",
-        "resources/models/psx_garage/scene.gltf"};
+    std::array<std::string, 1> file_paths = {
+        "../resources/models/stanford_dragon.obj"};
+    //"resources/models/psx_garage/scene.gltf"};
 
     for (const auto &path : file_paths) {
         auto g_obj = FrgGameObject::createGameObject();

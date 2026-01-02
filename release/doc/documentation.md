@@ -1,7 +1,10 @@
 ## Information for the examiners
 For us both it is our first time using the Vulkan API so we had to learn it from scratch.
 
-For the base of the renderer we followed the resources provided on the site [vulkan-tutorial](https://vulkan-tutorial.com/) and [Vulkan youtube series by Brendan Galea](https://www.youtube.com/playlist?list=PL8327DO66nu9qYVKLDmdLW_84-yE4auCR). Our base renderer is heavily inspired by the Vulkan youtube series from which we learnt a lot and as a result we now have a basic grasp of the vulkan API hierarchy and how the structures and classes fit together. This series was also included in the TUWEL page of the course. We felt like the tutorer created a really nice class hierarchy upon which with our little experience in Vulkan we could not improve.
+For the base of the renderer we followed the resources provided on the site 
+[vulkan-tutorial](https://vulkan-tutorial.com/) and 
+[Vulkan youtube series by Brendan Galea](https://www.youtube.com/playlist?list=PL8327DO66nu9qYVKLDmdLW_84-yE4auCR). 
+Our base renderer is heavily inspired by the Vulkan youtube series from which we learnt a lot and as a result we now have a basic grasp of the vulkan API hierarchy and how the structures and classes fit together. This series was also included in the TUWEL page of the course. We felt like the tutorer created a really nice class hierarchy upon which with our little experience in Vulkan we could not improve.
 
 ## Controls
 
