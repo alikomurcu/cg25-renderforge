@@ -87,6 +87,7 @@ add_executable(frg
     src/frg_game_object.cpp
     src/keyboard_movement_controller.cpp
     src/frg_lighting.cpp
+    src/frg_ssbo.cpp
 )
 
 # --- Shader compilation (GLSL -> SPIR-V) ---

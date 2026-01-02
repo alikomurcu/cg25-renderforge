@@ -13,16 +13,23 @@
 
 namespace frg {
 
-SimpleRenderSystem::SimpleRenderSystem(FrgDevice &device,
-                                       VkRenderPass renderPass,
-                                       FrgDescriptor &descriptor)
+SimpleRenderSystem::SimpleRenderSystem(
+    FrgDevice &device, VkRenderPass renderPass, FrgDescriptor &descriptor
+)
     : frgDevice{device}, frgDescriptor{descriptor} {
     createPipelineLayout();
     createPipeline(renderPass);
+    create_storage_buffers();
 }
 
 SimpleRenderSystem::~SimpleRenderSystem() {
     vkDestroyPipelineLayout(frgDevice.device(), pipelineLayout, nullptr);
+}
+
+void SimpleRenderSystem::create_storage_buffers() {
+    storage_buffers.resize(1);
+    FrgSsbo &storage_buffer = storage_buffers[0];
+    frgDevice.createBuffer()
 }
 
 void SimpleRenderSystem::createPipelineLayout() {
@@ -39,32 +46,39 @@ void SimpleRenderSystem::createPipelineLayout() {
     pipelineLayoutInfo.pushConstantRangeCount = 1;
     pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
-    if (vkCreatePipelineLayout(frgDevice.device(),
-                               &pipelineLayoutInfo,
-                               nullptr,
-                               &pipelineLayout) != VK_SUCCESS)
+    if (vkCreatePipelineLayout(
+            frgDevice.device(),
+            &pipelineLayoutInfo,
+            nullptr,
+            &pipelineLayout
+        ) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create pipeline layout!");
     }
 }
 
 void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
-    assert(pipelineLayout != nullptr &&
-           "Cannot create pipeline before pipeline layout");
+    assert(
+        pipelineLayout != nullptr &&
+        "Cannot create pipeline before pipeline layout"
+    );
 
     PipelineConfigInfo pipelineConfig{};
     FrgPipeline::defaultPipelineConfigInfo(pipelineConfig);
     pipelineConfig.renderPass = renderPass;
     pipelineConfig.pipelineLayout = pipelineLayout;
-    frgPipeline = std::make_unique<FrgPipeline>(frgDevice,
-                                                "shaders/triangle.vert.spv",
-                                                "shaders/triangle.frag.spv",
-                                                pipelineConfig);
+    frgPipeline = std::make_unique<FrgPipeline>(
+        frgDevice,
+        "shaders/triangle.vert.spv",
+        "shaders/triangle.frag.spv",
+        pipelineConfig
+    );
 }
 
 void SimpleRenderSystem::renderGameObjects(
     VkCommandBuffer commandBuffer, std::vector<FrgGameObject> &gameObjects,
-    const FrgCamera &camera, float frameTime) {
+    const FrgCamera &camera, float frameTime
+) {
     frgPipeline->bind(commandBuffer);
     auto projectionView = camera.getProjectionMatrix() * camera.getViewMatrix();
 
@@ -96,14 +110,16 @@ void SimpleRenderSystem::renderGameObjects(
             push.pointLightColor = lightData.pointLights[0].color;
         }
 
-        vkCmdBindDescriptorSets(commandBuffer,
-                                VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                pipelineLayout,
-                                0,
-                                frgDescriptor.descriptorSetCount(),
-                                frgDescriptor.descriptorSet(),
-                                0,
-                                nullptr);
+        vkCmdBindDescriptorSets(
+            commandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout,
+            0,
+            frgDescriptor.descriptorSetCount(),
+            frgDescriptor.descriptorSet(),
+            0,
+            nullptr
+        );
         gameObject.model->draw(commandBuffer, pipelineLayout, push);
     }
 }
