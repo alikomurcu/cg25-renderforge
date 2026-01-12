@@ -46,7 +46,7 @@ class FrgPipeline {
 
   private:
     static std::vector<char> readFile(const std::string &filePath);
-    void createComputePipeline(const std::string &compFilePath);
+    void createComputePipeline(const std::string &compFilePath, const VkDescriptorSetLayout *layouts);
     void createGraphicsPipeline(
         const std::string &vertFilePath, const std::string &fragFilePath, const PipelineConfigInfo &configInfo
     );
@@ -55,6 +55,8 @@ class FrgPipeline {
 
     FrgDevice &frgDevice;
     VkPipeline graphicsPipeline;
+    VkPipeline computePipeline;
+    VkPipelineLayout computePipelineLayout;
     VkShaderModule vertShaderModule;
     VkShaderModule fragShaderModule;
     VkShaderModule compShaderModule;

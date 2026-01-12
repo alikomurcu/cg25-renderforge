@@ -21,6 +21,8 @@ FrgPipeline::~FrgPipeline() {
     vkDestroyShaderModule(frgDevice.device(), fragShaderModule, nullptr);
     vkDestroyShaderModule(frgDevice.device(), compShaderModule, nullptr);
     vkDestroyPipeline(frgDevice.device(), graphicsPipeline, nullptr);
+    vkDestroyPipeline(frgDevice.device(), computePipeline, nullptr);
+    vkDestroyPipelineLayout(frgDevice.device(), computePipelineLayout, nullptr);
     for (size_t i = 0; i < FrgSwapChain::MAX_FRAMES_IN_FLIGHT; ++i) {
         vkDestroyBuffer(frgDevice.device(), shader_storage_buffers[i], nullptr);
         vkFreeMemory(frgDevice.device(), shader_storage_buffers_memory[i], nullptr);
@@ -44,7 +46,7 @@ std::vector<char> FrgPipeline::readFile(const std::string &filePath) {
     return buffer;
 }
 
-void FrgPipeline::createComputePipeline(const std::string &compFilePath) {
+void FrgPipeline::createComputePipeline(const std::string &compFilePath, const VkDescriptorSetLayout *layouts) {
     auto compCode = readFile(compFilePath);
     createShaderModule(compCode, &compShaderModule);
 
@@ -53,6 +55,27 @@ void FrgPipeline::createComputePipeline(const std::string &compFilePath) {
     comp_shader_stage_create_info.stage = VK_SHADER_STAGE_COMPUTE_BIT;
     comp_shader_stage_create_info.module = compShaderModule;
     comp_shader_stage_create_info.pName = "main";
+
+    VkPipelineLayoutCreateInfo pipeline_layout_info{};
+    pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipeline_layout_info.setLayoutCount = 1;
+    pipeline_layout_info.pSetLayouts = layouts;
+
+    if (vkCreatePipelineLayout(frgDevice.device(), &pipeline_layout_info, nullptr, &computePipelineLayout) !=
+        VK_SUCCESS)
+    {
+        throw std::runtime_error("failed to create compute pipeline layout!");
+    }
+
+    VkComputePipelineCreateInfo pipeline_info{};
+    pipeline_info.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    pipeline_info.layout = computePipelineLayout;
+    pipeline_info.stage = comp_shader_stage_create_info;
+    if (vkCreateComputePipelines(frgDevice.device(), VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &computePipeline) !=
+        VK_SUCCESS)
+    {
+        throw std::runtime_error("failed to create compute pipeline!");
+    }
 }
 
 void FrgPipeline::createGraphicsPipeline(
