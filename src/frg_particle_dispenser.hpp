@@ -30,7 +30,7 @@ class FrgParticleDispenser {
     FrgDevice &m_device;
     uint32_t m_particle_count;
     VkBuffer m_staging_buff;
-    VkDevice Memory m_staging_buff_mem;
+    VkDeviceMemory m_staging_buff_mem;
     VkDeviceSize m_staging_buff_size;
 
     std::vector<Particle> m_particles;
