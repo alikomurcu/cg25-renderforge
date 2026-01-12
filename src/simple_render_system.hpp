@@ -7,7 +7,6 @@
 #include "frg_lighting.hpp"
 #include "frg_model.hpp"
 #include "frg_pipeline.hpp"
-#include "frg_ssbo.hpp"
 // std
 #include <memory>
 #include <vector>
@@ -15,16 +14,13 @@
 namespace frg {
 class SimpleRenderSystem {
   public:
-    SimpleRenderSystem(
-        FrgDevice &device, VkRenderPass renderPass, FrgDescriptor &descriptor
-    );
+    SimpleRenderSystem(FrgDevice &device, VkRenderPass renderPass, FrgDescriptor &descriptor);
     ~SimpleRenderSystem();
 
     SimpleRenderSystem(const SimpleRenderSystem &) = delete;
     SimpleRenderSystem &operator=(const SimpleRenderSystem &) = delete;
     void renderGameObjects(
-        VkCommandBuffer commandBuffer, std::vector<FrgGameObject> &gameObjects,
-        const FrgCamera &camera, float frameTime
+        VkCommandBuffer commandBuffer, std::vector<FrgGameObject> &gameObjects, const FrgCamera &camera, float frameTime
     );
 
     // Lighting interface
@@ -33,7 +29,6 @@ class SimpleRenderSystem {
   private:
     void createPipelineLayout();
     void createPipeline(VkRenderPass renderPass);
-    void create_storage_buffers();
 
     FrgDevice &frgDevice;
     FrgDescriptor &frgDescriptor;
@@ -41,7 +36,5 @@ class SimpleRenderSystem {
 
     std::unique_ptr<FrgPipeline> frgPipeline;
     VkPipelineLayout pipelineLayout;
-
-    std::vector<FrgSsbo> storage_buffers{};
 };
 } // namespace frg

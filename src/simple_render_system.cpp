@@ -13,29 +13,17 @@
 
 namespace frg {
 
-SimpleRenderSystem::SimpleRenderSystem(
-    FrgDevice &device, VkRenderPass renderPass, FrgDescriptor &descriptor
-)
+SimpleRenderSystem::SimpleRenderSystem(FrgDevice &device, VkRenderPass renderPass, FrgDescriptor &descriptor)
     : frgDevice{device}, frgDescriptor{descriptor} {
     createPipelineLayout();
     createPipeline(renderPass);
-    create_storage_buffers();
 }
 
-SimpleRenderSystem::~SimpleRenderSystem() {
-    vkDestroyPipelineLayout(frgDevice.device(), pipelineLayout, nullptr);
-}
-
-void SimpleRenderSystem::create_storage_buffers() {
-    storage_buffers.resize(1);
-    FrgSsbo &storage_buffer = storage_buffers[0];
-    frgDevice.createBuffer()
-}
+SimpleRenderSystem::~SimpleRenderSystem() { vkDestroyPipelineLayout(frgDevice.device(), pipelineLayout, nullptr); }
 
 void SimpleRenderSystem::createPipelineLayout() {
     VkPushConstantRange pushConstantRange{};
-    pushConstantRange.stageFlags =
-        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     pushConstantRange.offset = 0;
     pushConstantRange.size = sizeof(SimplePushConstantData);
 
@@ -46,22 +34,13 @@ void SimpleRenderSystem::createPipelineLayout() {
     pipelineLayoutInfo.pushConstantRangeCount = 1;
     pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
-    if (vkCreatePipelineLayout(
-            frgDevice.device(),
-            &pipelineLayoutInfo,
-            nullptr,
-            &pipelineLayout
-        ) != VK_SUCCESS)
-    {
+    if (vkCreatePipelineLayout(frgDevice.device(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
 }
 
 void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
-    assert(
-        pipelineLayout != nullptr &&
-        "Cannot create pipeline before pipeline layout"
-    );
+    assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
     PipelineConfigInfo pipelineConfig{};
     FrgPipeline::defaultPipelineConfigInfo(pipelineConfig);
@@ -76,8 +55,7 @@ void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
 }
 
 void SimpleRenderSystem::renderGameObjects(
-    VkCommandBuffer commandBuffer, std::vector<FrgGameObject> &gameObjects,
-    const FrgCamera &camera, float frameTime
+    VkCommandBuffer commandBuffer, std::vector<FrgGameObject> &gameObjects, const FrgCamera &camera, float frameTime
 ) {
     frgPipeline->bind(commandBuffer);
     auto projectionView = camera.getProjectionMatrix() * camera.getViewMatrix();
@@ -89,8 +67,7 @@ void SimpleRenderSystem::renderGameObjects(
     // Update light position based on orbit animation
     float angle = totalTime * glm::radians(90.0f); // 90 degrees per second
     float radius = 3.0f;
-    glm::vec3 lightPos =
-        glm::vec3(radius * glm::cos(angle), 1.5f, radius * glm::sin(angle));
+    glm::vec3 lightPos = glm::vec3(radius * glm::cos(angle), 1.5f, radius * glm::sin(angle));
 
     // Update the light manager with the orbiting point light
     if (light_manager.getPointLightCount() > 0) {

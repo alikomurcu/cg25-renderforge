@@ -1,6 +1,7 @@
 #pragma once
 
 #include "frg_device.hpp"
+#include "frg_swap_chain.hpp"
 
 // std
 #include <string>
@@ -29,8 +30,8 @@ struct PipelineConfigInfo {
 class FrgPipeline {
   public:
     FrgPipeline(
-        FrgDevice &device, const std::string &vertFilePath,
-        const std::string &fragFilePath, const PipelineConfigInfo &configInfo
+        FrgDevice &device, const std::string &vertFilePath, const std::string &fragFilePath,
+        const PipelineConfigInfo &configInfo
     );
 
     ~FrgPipeline();
@@ -41,24 +42,23 @@ class FrgPipeline {
 
     void bind(VkCommandBuffer commandBuffer);
     static void defaultPipelineConfigInfo(PipelineConfigInfo &configInfo);
+    void create_shader_storage_buffers();
 
   private:
     static std::vector<char> readFile(const std::string &filePath);
+    void createComputePipeline(const std::string &compFilePath);
     void createGraphicsPipeline(
-        const std::string &vertFilePath, const std::string &fragFilePath,
-        const PipelineConfigInfo &configInfo
+        const std::string &vertFilePath, const std::string &fragFilePath, const PipelineConfigInfo &configInfo
     );
 
-    void create_compute_pipeline(const std::string &shader_file_path);
-
-    void createShaderModule(
-        const std::vector<char> &code, VkShaderModule *shaderModule
-    );
+    void createShaderModule(const std::vector<char> &code, VkShaderModule *shaderModule);
 
     FrgDevice &frgDevice;
     VkPipeline graphicsPipeline;
     VkShaderModule vertShaderModule;
     VkShaderModule fragShaderModule;
     VkShaderModule compShaderModule;
+    std::vector<VkBuffer> shader_storage_buffers;
+    std::vector<VkDeviceMemory> shader_storage_buffers_memory;
 };
 } // namespace frg

@@ -9,8 +9,8 @@
 
 namespace frg {
 FrgPipeline::FrgPipeline(
-    FrgDevice &device, const std::string &vertFilePath,
-    const std::string &fragFilePath, const PipelineConfigInfo &configInfo
+    FrgDevice &device, const std::string &vertFilePath, const std::string &fragFilePath,
+    const PipelineConfigInfo &configInfo
 )
     : frgDevice(device) {
     createGraphicsPipeline(vertFilePath, fragFilePath, configInfo);
@@ -19,7 +19,12 @@ FrgPipeline::FrgPipeline(
 FrgPipeline::~FrgPipeline() {
     vkDestroyShaderModule(frgDevice.device(), vertShaderModule, nullptr);
     vkDestroyShaderModule(frgDevice.device(), fragShaderModule, nullptr);
+    vkDestroyShaderModule(frgDevice.device(), compShaderModule, nullptr);
     vkDestroyPipeline(frgDevice.device(), graphicsPipeline, nullptr);
+    for (size_t i = 0; i < FrgSwapChain::MAX_FRAMES_IN_FLIGHT; ++i) {
+        vkDestroyBuffer(frgDevice.device(), shader_storage_buffers[i], nullptr);
+        vkFreeMemory(frgDevice.device(), shader_storage_buffers_memory[i], nullptr);
+    }
 }
 
 std::vector<char> FrgPipeline::readFile(const std::string &filePath) {
@@ -39,9 +44,19 @@ std::vector<char> FrgPipeline::readFile(const std::string &filePath) {
     return buffer;
 }
 
+void FrgPipeline::createComputePipeline(const std::string &compFilePath) {
+    auto compCode = readFile(compFilePath);
+    createShaderModule(compCode, &compShaderModule);
+
+    VkPipelineShaderStageCreateInfo comp_shader_stage_create_info{};
+    comp_shader_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    comp_shader_stage_create_info.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    comp_shader_stage_create_info.module = compShaderModule;
+    comp_shader_stage_create_info.pName = "main";
+}
+
 void FrgPipeline::createGraphicsPipeline(
-    const std::string &vertFilePath, const std::string &fragFilePath,
-    const PipelineConfigInfo &configInfo
+    const std::string &vertFilePath, const std::string &fragFilePath, const PipelineConfigInfo &configInfo
 ) {
 
     assert(
@@ -50,9 +65,8 @@ void FrgPipeline::createGraphicsPipeline(
         "configInfo"
     );
     assert(
-        configInfo.renderPass != VK_NULL_HANDLE &&
-        "Cannot create graphics pipeline: no render pass provided in "
-        "configInfo"
+        configInfo.renderPass != VK_NULL_HANDLE && "Cannot create graphics pipeline: no render pass provided in "
+                                                   "configInfo"
     );
 
     auto vertCode = readFile(vertFilePath);
@@ -81,13 +95,10 @@ void FrgPipeline::createGraphicsPipeline(
     auto bindingDescriptions = Vertex::get_binding_descriptions();
     auto attributeDescriptions = Vertex::get_attribute_descriptions();
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-    vertexInputInfo.sType =
-        VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputInfo.vertexBindingDescriptionCount =
-        static_cast<uint32_t>(bindingDescriptions.size());
+    vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size());
     vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
-    vertexInputInfo.vertexAttributeDescriptionCount =
-        static_cast<uint32_t>(attributeDescriptions.size());
+    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
     vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
     VkGraphicsPipelineCreateInfo pipelineInfo{};
@@ -111,73 +122,40 @@ void FrgPipeline::createGraphicsPipeline(
     pipelineInfo.basePipelineIndex = -1;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-    if (vkCreateGraphicsPipelines(
-            frgDevice.device(),
-            VK_NULL_HANDLE,
-            1,
-            &pipelineInfo,
-            nullptr,
-            &graphicsPipeline
-        ) != VK_SUCCESS)
+    if (vkCreateGraphicsPipelines(frgDevice.device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) !=
+        VK_SUCCESS)
     {
         throw std::runtime_error("failed to create graphics pipeline!");
     }
 }
 
-void FrgPipeline::create_compute_pipeline(const std::string &shader_file_path) {
-    auto shader_code = readFile(shader_file_path);
-
-    createShaderModule(shader_code, compShaderModule);
-    VkPipelineShaderStageCreateInfo compute_shader_stage_info{};
-    compute_shader_stage_info.sType =
-        VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    compute_shader_stage_info.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-    compute_shader_stage_info.module = compShaderModule;
-    compute_shader_stage_info.pName = "main";
-}
-
-void FrgPipeline::createShaderModule(
-    const std::vector<char> &code, VkShaderModule *shaderModule
-) {
+void FrgPipeline::createShaderModule(const std::vector<char> &code, VkShaderModule *shaderModule) {
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.codeSize = code.size();
     createInfo.pCode = reinterpret_cast<const uint32_t *>(code.data());
 
-    if (vkCreateShaderModule(
-            frgDevice.device(),
-            &createInfo,
-            nullptr,
-            shaderModule
-        ) != VK_SUCCESS)
-    {
+    if (vkCreateShaderModule(frgDevice.device(), &createInfo, nullptr, shaderModule) != VK_SUCCESS) {
         throw std::runtime_error("failed to create shader module!");
     }
 }
 
 void FrgPipeline::bind(VkCommandBuffer commandBuffer) {
-    vkCmdBindPipeline(
-        commandBuffer,
-        VK_PIPELINE_BIND_POINT_GRAPHICS,
-        graphicsPipeline
-    );
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 }
 
 void FrgPipeline::defaultPipelineConfigInfo(PipelineConfigInfo &configInfo) {
-    configInfo.inputAssemblyInfo.sType =
-        VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    configInfo.inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     configInfo.inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     configInfo.inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
 
-    configInfo.viewportInfo.sType =
-        VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    configInfo.viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
     configInfo.viewportInfo.viewportCount = 1;
     configInfo.viewportInfo.scissorCount = 1;
     configInfo.viewportInfo.pViewports = nullptr;
     configInfo.viewportInfo.pScissors = nullptr;
 
-    configInfo.rasterizationInfo.sType =
-        VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    configInfo.rasterizationInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     configInfo.rasterizationInfo.depthClampEnable = VK_FALSE;
     configInfo.rasterizationInfo.rasterizerDiscardEnable = VK_FALSE;
     configInfo.rasterizationInfo.polygonMode = VK_POLYGON_MODE_FILL;
@@ -189,8 +167,7 @@ void FrgPipeline::defaultPipelineConfigInfo(PipelineConfigInfo &configInfo) {
     configInfo.rasterizationInfo.depthBiasClamp = 0.0f;          // Optional
     configInfo.rasterizationInfo.depthBiasSlopeFactor = 0.0f;    // Optional
 
-    configInfo.multisampleInfo.sType =
-        VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    configInfo.multisampleInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     configInfo.multisampleInfo.sampleShadingEnable = VK_FALSE;
     configInfo.multisampleInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
     configInfo.multisampleInfo.minSampleShading = 1.0f;          // Optional
@@ -199,22 +176,16 @@ void FrgPipeline::defaultPipelineConfigInfo(PipelineConfigInfo &configInfo) {
     configInfo.multisampleInfo.alphaToOneEnable = VK_FALSE;      // Optional
 
     configInfo.colorBlendAttachment.colorWriteMask =
-        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-        VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
     configInfo.colorBlendAttachment.blendEnable = VK_FALSE;
-    configInfo.colorBlendAttachment.srcColorBlendFactor =
-        VK_BLEND_FACTOR_ONE; // Optional
-    configInfo.colorBlendAttachment.dstColorBlendFactor =
-        VK_BLEND_FACTOR_ZERO;                                       // Optional
-    configInfo.colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD; // Optional
-    configInfo.colorBlendAttachment.srcAlphaBlendFactor =
-        VK_BLEND_FACTOR_ONE; // Optional
-    configInfo.colorBlendAttachment.dstAlphaBlendFactor =
-        VK_BLEND_FACTOR_ZERO;                                       // Optional
-    configInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD; // Optional
+    configInfo.colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;  // Optional
+    configInfo.colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO; // Optional
+    configInfo.colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;             // Optional
+    configInfo.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;  // Optional
+    configInfo.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO; // Optional
+    configInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;             // Optional
 
-    configInfo.colorBlendInfo.sType =
-        VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    configInfo.colorBlendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     configInfo.colorBlendInfo.logicOpEnable = VK_FALSE;
     configInfo.colorBlendInfo.logicOp = VK_LOGIC_OP_COPY; // Optional
     configInfo.colorBlendInfo.attachmentCount = 1;
@@ -224,8 +195,7 @@ void FrgPipeline::defaultPipelineConfigInfo(PipelineConfigInfo &configInfo) {
     configInfo.colorBlendInfo.blendConstants[2] = 0.0f; // Optional
     configInfo.colorBlendInfo.blendConstants[3] = 0.0f; // Optional
 
-    configInfo.depthStencilInfo.sType =
-        VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    configInfo.depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
     configInfo.depthStencilInfo.depthTestEnable = VK_TRUE;
     configInfo.depthStencilInfo.depthWriteEnable = VK_TRUE;
     configInfo.depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS;
@@ -236,16 +206,14 @@ void FrgPipeline::defaultPipelineConfigInfo(PipelineConfigInfo &configInfo) {
     configInfo.depthStencilInfo.front = {}; // Optional
     configInfo.depthStencilInfo.back = {};  // Optional
 
-    configInfo.dynamicStateEnables = {
-        VK_DYNAMIC_STATE_VIEWPORT,
-        VK_DYNAMIC_STATE_SCISSOR
-    };
-    configInfo.dynamicStateInfo.sType =
-        VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-    configInfo.dynamicStateInfo.pDynamicStates =
-        configInfo.dynamicStateEnables.data();
-    configInfo.dynamicStateInfo.dynamicStateCount =
-        static_cast<uint32_t>(configInfo.dynamicStateEnables.size());
+    configInfo.dynamicStateEnables = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+    configInfo.dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    configInfo.dynamicStateInfo.pDynamicStates = configInfo.dynamicStateEnables.data();
+    configInfo.dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(configInfo.dynamicStateEnables.size());
     configInfo.dynamicStateInfo.flags = 0;
+}
+void FrgPipeline::create_shader_storage_buffers() {
+    shader_storage_buffers.resize(FrgSwapChain::MAX_FRAMES_IN_FLIGHT);
+    shader_storage_buffers_memory.resize(FrgSwapChain::MAX_FRAMES_IN_FLIGHT);
 }
 } // namespace frg
