@@ -24,6 +24,7 @@ class FrgParticleDispenser {
     const uint32_t particle_count() { return m_particle_count; }
     const VkBuffer *staging_buffer() { return &m_staging_buff; }
     const VkDeviceSize *staging_buffer_size() { return &m_staging_buff_size; }
+    void cpy_host2dev(std::vector<VkBuffer> &buffers, std::vector<VkDeviceMemory> &buffers_memory);
 
   private:
     FrgDevice &m_device;

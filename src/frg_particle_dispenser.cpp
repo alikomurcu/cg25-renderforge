@@ -35,4 +35,19 @@ FrgParticleDispenser::~FrgParticleDispenser() {
     vkDestroyBuffer(m_device.device(), m_staging_buff, nullptr);
     vkFreeMemory(m_device.device(), m_staging_buff_mem, nullptr);
 }
+void FrgParticleDispenser::cpy_host2dev(std::vector<VkBuffer> &buffers, std::vector<VkDeviceMemory> &buffers_memory) {
+    assert(buffers.size() > 0 && "Shader buffer array has to have at least one buffer!");
+    assert(buffers.size() == buffers_memory.size() && "Shader buffer and shader buffer memory sizes have to be equal!");
+
+    for (size_t i = 0; i < buffers.size(); ++i) {
+        m_device.createBuffer(
+            m_staging_buff_size,
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+            buffers[i],
+            buffers_memory[i]
+        );
+        m_device.copyBuffer(m_staging_buff, buffers[i], m_staging_buff_size);
+    }
+}
 } // namespace frg
