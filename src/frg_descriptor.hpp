@@ -27,6 +27,11 @@ class FrgDescriptor {
         size_t ssbo_size
     );
 
+    void recordComputeCommandBuffer(
+        VkCommandBuffer command_buf, VkPipelineLayout pipeline_layout, VkPipeline compute_pipeline, size_t dispatch,
+        size_t desc_idx
+    );
+
   private:
     void create_descriptor_set_layout_binding();
     void create_comp_descriptor_set_layout_binding();

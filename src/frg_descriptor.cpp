@@ -213,4 +213,32 @@ void FrgDescriptor::write_comp_descriptor_sets(
     }
 }
 
+void FrgDescriptor::recordComputeCommandBuffer(
+    VkCommandBuffer command_buf, VkPipelineLayout pipeline_layout, VkPipeline compute_pipeline, size_t dispatch,
+    size_t desc_idx
+) {
+    VkCommandBufferBeginInfo begin_info{};
+    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+    if (vkBeginCommandBuffer(command_buf, &begin_info) != VK_SUCCESS) {
+        throw std::runtime_error("failed to begin recording compute command buffer!");
+    }
+
+    vkCmdBindPipeline(command_buf, VK_PIPELINE_BIND_POINT_COMPUTE, compute_pipeline);
+    vkCmdBindDescriptorSets(
+        command_buf,
+        VK_PIPELINE_BIND_POINT_COMPUTE,
+        pipeline_layout,
+        0,
+        1,
+        &comp_descriptor_set[desc_idx],
+        0,
+        nullptr
+    );
+    vkCmdDispatch(command_buf, dispatch, 1, 1);
+    if (vkEndCommandBuffer(command_buf) != VK_SUCCESS) {
+        throw std::runtime_error("failed to record compute command buffer!");
+    }
+}
+
 } // namespace frg

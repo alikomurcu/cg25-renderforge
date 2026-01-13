@@ -63,6 +63,22 @@ FrgDevice::~FrgDevice() {
     vkDestroyInstance(instance, nullptr);
 }
 
+std::vector<VkCommandBuffer> FrgDevice::createComputeCommandBuffers(size_t buff_count) {
+    std::vector<VkCommandBuffer> buffers(buff_count);
+
+    VkCommandBufferAllocateInfo alloc_info{};
+    alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    alloc_info.commandPool = commandPool;
+    alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    alloc_info.commandBufferCount = static_cast<uint32_t>(buff_count);
+
+    if (vkAllocateCommandBuffers(device_, &alloc_info, buffers.data()) != VK_SUCCESS) {
+        throw std::runtime_error("failed to allocate compute command buffers!");
+    }
+
+    return buffers;
+}
+
 void FrgDevice::createInstance() {
     if (enableValidationLayers && !checkValidationLayerSupport()) {
         throw std::runtime_error("validation layers requested, but not available!");

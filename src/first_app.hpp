@@ -35,6 +35,7 @@ class FirstApp {
 
     std::vector<VkDescriptorImageInfo> get_descriptors_of_game_objects();
     std::vector<FrgGameObject> gameObjects;
+    std::vector<VkCommandBuffer> computeCommandBuffers;
     uint32_t globalTextureIndex{0};
 };
 } // namespace frg

@@ -19,9 +19,7 @@ struct QueueFamilyIndices {
     uint32_t presentFamily;
     bool graphicsFamilyHasValue = false;
     bool presentFamilyHasValue = false;
-    bool isComplete() {
-        return graphicsFamilyHasValue && presentFamilyHasValue;
-    }
+    bool isComplete() { return graphicsFamilyHasValue && presentFamilyHasValue; }
 };
 
 class FrgDevice {
@@ -49,39 +47,31 @@ class FrgDevice {
     VkQueue presentQueue() { return presentQueue_; }
     VkQueue computeQueue() { return computeQueue_; }
 
-    SwapChainSupportDetails getSwapChainSupport() {
-        return querySwapChainSupport(physicalDevice);
-    }
-    uint32_t
-        findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-    QueueFamilyIndices findPhysicalQueueFamilies() {
-        return findQueueFamilies(physicalDevice);
-    }
+    SwapChainSupportDetails getSwapChainSupport() { return querySwapChainSupport(physicalDevice); }
+    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+    QueueFamilyIndices findPhysicalQueueFamilies() { return findQueueFamilies(physicalDevice); }
     VkFormat findSupportedFormat(
-        const std::vector<VkFormat> &candidates, VkImageTiling tiling,
-        VkFormatFeatureFlags features
+        const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features
     );
 
     // Buffer Helper Functions
     void createBuffer(
-        VkDeviceSize size, VkBufferUsageFlags usage,
-        VkMemoryPropertyFlags properties, VkBuffer &buffer,
+        VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer,
         VkDeviceMemory &bufferMemory
     );
     VkCommandBuffer beginSingleTimeCommands();
     void endSingleTimeCommands(VkCommandBuffer commandBuffer);
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-    void copyBufferToImage(
-        VkBuffer buffer, VkImage image, uint32_t width, uint32_t height,
-        uint32_t layerCount
-    );
+    void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount);
 
     void createImageWithInfo(
-        const VkImageCreateInfo &imageInfo, VkMemoryPropertyFlags properties,
-        VkImage &image, VkDeviceMemory &imageMemory
+        const VkImageCreateInfo &imageInfo, VkMemoryPropertyFlags properties, VkImage &image,
+        VkDeviceMemory &imageMemory
     );
 
     VkPhysicalDeviceProperties properties;
+
+    std::vector<VkCommandBuffer> createComputeCommandBuffers(size_t buff_count);
 
   private:
     void createInstance();
@@ -97,9 +87,7 @@ class FrgDevice {
     std::vector<const char *> getRequiredExtensions();
     bool checkValidationLayerSupport();
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
-    void populateDebugMessengerCreateInfo(
-        VkDebugUtilsMessengerCreateInfoEXT &createInfo
-    );
+    void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
     void hasGflwRequiredInstanceExtensions();
     bool checkDeviceExtensionSupport(VkPhysicalDevice device);
     SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
@@ -118,13 +106,9 @@ class FrgDevice {
 
     VkSampler texture_sampler = VK_NULL_HANDLE;
 
-    const std::vector<const char *> validationLayers = {
-        "VK_LAYER_KHRONOS_validation"
-    };
+    const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
     const std::vector<const char *> deviceExtensions = [] {
-        std::vector<const char *> extensions = {
-            VK_KHR_SWAPCHAIN_EXTENSION_NAME
-        };
+        std::vector<const char *> extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 #if defined(__APPLE__)
         extensions.push_back(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
 #endif

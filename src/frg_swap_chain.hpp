@@ -6,15 +6,14 @@
 #include <vulkan/vulkan.h>
 
 // std lib headers
+#include <functional>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
-namespace frg
-{
+namespace frg {
 
-  class FrgSwapChain
-  {
+class FrgSwapChain {
   public:
     static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -34,18 +33,21 @@ namespace frg
     uint32_t width() { return swapChainExtent.width; }
     uint32_t height() { return swapChainExtent.height; }
 
-    float extentAspectRatio()
-    {
-      return static_cast<float>(swapChainExtent.width) / static_cast<float>(swapChainExtent.height);
+    float extentAspectRatio() {
+        return static_cast<float>(swapChainExtent.width) / static_cast<float>(swapChainExtent.height);
     }
     VkFormat findDepthFormat();
 
     VkResult acquireNextImage(uint32_t *imageIndex);
     VkResult submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex);
-    bool compareSwapFormats(const FrgSwapChain &otherSwapChain) const
-    {
-      return otherSwapChain.swapChainDepthFormat == swapChainDepthFormat &&
-             otherSwapChain.swapChainImageFormat == swapChainImageFormat;
+    void submitComputeCommandBuffer(
+        std::vector<VkCommandBuffer> &buffers,
+        std::function<void(VkCommandBuffer, VkPipelineLayout, VkPipeline, size_t, size_t)> renderFnc,
+        VkPipelineLayout layout, VkPipeline pipeline, size_t particle_count
+    );
+    bool compareSwapFormats(const FrgSwapChain &otherSwapChain) const {
+        return otherSwapChain.swapChainDepthFormat == swapChainDepthFormat &&
+               otherSwapChain.swapChainImageFormat == swapChainImageFormat;
     }
 
   private:
@@ -58,10 +60,8 @@ namespace frg
     void createSyncObjects();
 
     // Helper functions
-    VkSurfaceFormatKHR chooseSwapSurfaceFormat(
-        const std::vector<VkSurfaceFormatKHR> &availableFormats);
-    VkPresentModeKHR chooseSwapPresentMode(
-        const std::vector<VkPresentModeKHR> &availablePresentModes);
+    VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);
+    VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes);
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
 
     VkFormat swapChainImageFormat;
@@ -85,9 +85,12 @@ namespace frg
 
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
+    std::vector<VkSemaphore> computeFinishedSemaphores;
     std::vector<VkFence> inFlightFences;
+    std::vector<VkFence> inComputeFlightFences;
     std::vector<VkFence> imagesInFlight;
     size_t currentFrame = 0;
-  };
+    bool has_compute;
+};
 
 } // namespace frg

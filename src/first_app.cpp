@@ -21,6 +21,7 @@ namespace frg {
 FirstApp::FirstApp() {
     loadGameObjects();
     frgDescriptor.write_descriptor_sets(get_descriptors_of_game_objects());
+    computeCommandBuffers = frgDevice.createComputeCommandBuffers(FrgSwapChain::MAX_FRAMES_IN_FLIGHT);
 }
 
 FirstApp::~FirstApp() {}
