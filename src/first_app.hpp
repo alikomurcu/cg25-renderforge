@@ -3,8 +3,11 @@
 #include "frg_descriptor.hpp"
 #include "frg_device.hpp"
 #include "frg_game_object.hpp"
+#include "frg_gbuffer.hpp"
 #include "frg_renderer.hpp"
+#include "frg_ssao.hpp"
 #include "frg_window.hpp"
+#include "ssao_render_system.hpp"
 
 // std
 #include <memory>
@@ -13,28 +16,28 @@
 
 namespace frg {
 class FirstApp {
-  public:
-    static constexpr int WIDTH = 800;
-    static constexpr int HEIGHT = 600;
+public:
+  static constexpr int WIDTH = 800;
+  static constexpr int HEIGHT = 600;
 
-    FirstApp();
-    ~FirstApp();
+  FirstApp();
+  ~FirstApp();
 
-    FirstApp(const FirstApp &) = delete;
-    FirstApp &operator=(const FirstApp &) = delete;
+  FirstApp(const FirstApp &) = delete;
+  FirstApp &operator=(const FirstApp &) = delete;
 
-    void run();
+  void run();
 
-  private:
-    void loadGameObjects();
+private:
+  void loadGameObjects();
 
-    FrgWindow frgWindow{WIDTH, HEIGHT, "RenderForge"};
-    FrgDevice frgDevice{frgWindow};
-    FrgDescriptor frgDescriptor{frgDevice};
-    FrgRenderer frgRenderer{frgWindow, frgDevice};
+  FrgWindow frgWindow{WIDTH, HEIGHT, "RenderForge"};
+  FrgDevice frgDevice{frgWindow};
+  FrgDescriptor frgDescriptor{frgDevice};
+  FrgRenderer frgRenderer{frgWindow, frgDevice};
 
-    std::vector<VkDescriptorImageInfo> get_descriptors_of_game_objects();
-    std::vector<FrgGameObject> gameObjects;
-    uint32_t globalTextureIndex{0};
+  std::vector<VkDescriptorImageInfo> get_descriptors_of_game_objects();
+  std::vector<FrgGameObject> gameObjects;
+  uint32_t globalTextureIndex{0};
 };
 } // namespace frg
