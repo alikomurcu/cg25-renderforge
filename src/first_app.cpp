@@ -1,5 +1,6 @@
 #include "first_app.hpp"
 
+#include "camera_animation_system.hpp"
 #include "frg_camera.hpp"
 #include "keyboard_movement_controller.hpp"
 #include "simple_render_system.hpp"
@@ -60,6 +61,24 @@ void FirstApp::run() {
   auto viewerObject = FrgGameObject::createGameObject();
   KeyboardMovementController cameraController;
 
+  // Camera Animation System Setup
+  CameraAnimationSystem cameraAnimationSystem;
+  // Create a circular path around the viking room at (0,0,2)
+  // Radius ~3.0
+  // t=0: Start position
+  cameraAnimationSystem.addKeyframe(0.f, glm::vec3{0.f, 0.f, -1.f},
+                                    glm::vec3{0.f, 0.f, 0.f});
+  // t=2.5: Middle position
+  cameraAnimationSystem.addKeyframe(2.5f, glm::vec3{3.f, 0.f, 2.f},
+                                    glm::vec3{0.f, -1.57f, 0.f});
+  // t=5.0: Return to start position (Back and Forth loop)
+  cameraAnimationSystem.addKeyframe(5.0f, glm::vec3{0.f, 0.f, -1.f},
+                                    glm::vec3{0.f, 0.f, 0.f});
+
+  bool isAutoCamera = true; // Start with animation enabled
+  bool mKeyWasPressed = false;
+  float animationTime = 0.f;
+
   auto curTime = std::chrono::high_resolution_clock::now();
 
   // Add a point light to the scene
@@ -80,14 +99,29 @@ void FirstApp::run() {
   bool cKeyWasPressed = false;
 
   std::cout << "\n=== Controls ===\n";
-  std::cout << "WASD: Move camera\n";
-  std::cout << "Arrow keys: Look around\n";
+  std::cout << "M: Toggle Camera Animation (Auto/Manual)\n";
+  std::cout << "WASD: Move camera (Manual mode)\n";
+  std::cout << "Arrow keys: Look around (Manual mode)\n";
   std::cout << "O: Toggle SSAO\n";
   std::cout << "C: Cycle debug mode (Normal/SSAO/Normals/Depth)\n";
   std::cout << "================\n\n";
 
   while (!frgWindow.shouldClose()) {
     glfwPollEvents();
+
+    // Check for Camera Mode toggle (M key)
+    bool mKeyPressed =
+        glfwGetKey(frgWindow.getGLFWwindow(), GLFW_KEY_M) == GLFW_PRESS;
+    if (mKeyPressed && !mKeyWasPressed) {
+      isAutoCamera = !isAutoCamera;
+      std::cout << "Camera Mode: "
+                << (isAutoCamera ? "Auto (Animation)" : "Manual") << std::endl;
+      // Reset animation time when switching to auto? Or keep it running?
+      // Let's reset to restart the cinematic feel.
+      if (isAutoCamera)
+        animationTime = 0.f;
+    }
+    mKeyWasPressed = mKeyPressed;
 
     // Check for SSAO toggle (O key) - detect key press, not hold
     bool oKeyPressed =
@@ -116,8 +150,18 @@ void FirstApp::run() {
             .count();
     curTime = newTime;
 
-    cameraController.moveInPlaneXZ(frgWindow.getGLFWwindow(), frameTime,
-                                   viewerObject);
+    if (isAutoCamera) {
+      animationTime += frameTime;
+      // Loop the animation
+      if (animationTime > 5.f) {
+        animationTime = 0.f; // Simple loop
+      }
+      cameraAnimationSystem.update(animationTime, viewerObject);
+    } else {
+      cameraController.moveInPlaneXZ(frgWindow.getGLFWwindow(), frameTime,
+                                     viewerObject);
+    }
+
     camera.setViewYXZ(viewerObject.transform.translation,
                       viewerObject.transform.rotation);
 

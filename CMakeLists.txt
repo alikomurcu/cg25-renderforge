@@ -90,6 +90,7 @@ add_executable(frg
     src/frg_gbuffer.cpp
     src/frg_ssao.cpp
     src/ssao_render_system.cpp
+    src/camera_animation_system.cpp
 )
 
 # --- Shader compilation (GLSL -> SPIR-V) ---
