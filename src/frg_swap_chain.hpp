@@ -1,6 +1,7 @@
 #pragma once
 
 #include "frg_device.hpp"
+#include "frg_particle_dispenser.hpp"
 
 // vulkan headers
 #include <vulkan/vulkan.h>
@@ -39,16 +40,19 @@ class FrgSwapChain {
     VkFormat findDepthFormat();
 
     VkResult acquireNextImage(uint32_t *imageIndex);
-    VkResult submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex);
+    VkResult submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex, bool has_compute = false);
     void submitComputeCommandBuffer(
-        std::vector<VkCommandBuffer> &buffers,
+        std::vector<VkCommandBuffer> &buffers, std::vector<void *> &ubos_mapped,
         std::function<void(VkCommandBuffer, VkPipelineLayout, VkPipeline, size_t, size_t)> renderFnc,
-        VkPipelineLayout layout, VkPipeline pipeline, size_t particle_count
+        VkPipelineLayout layout, VkPipeline pipeline, size_t particle_count, UniformBufferObject ubo
     );
     bool compareSwapFormats(const FrgSwapChain &otherSwapChain) const {
         return otherSwapChain.swapChainDepthFormat == swapChainDepthFormat &&
                otherSwapChain.swapChainImageFormat == swapChainImageFormat;
     }
+
+    void updateUniformBuffer(std::vector<void *> &ubos, const UniformBufferObject &obj);
+    void bindAndDrawCompute(VkCommandBuffer comm_buff, std::vector<VkBuffer> ssbos, uint32_t point_count);
 
   private:
     void init();
@@ -90,7 +94,6 @@ class FrgSwapChain {
     std::vector<VkFence> inComputeFlightFences;
     std::vector<VkFence> imagesInFlight;
     size_t currentFrame = 0;
-    bool has_compute;
 };
 
 } // namespace frg

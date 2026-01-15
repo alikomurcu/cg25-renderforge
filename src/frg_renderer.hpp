@@ -1,7 +1,9 @@
 #pragma once
 
+#include "frg_descriptor.hpp"
 #include "frg_device.hpp"
 #include "frg_model.hpp"
+#include "frg_pipeline.hpp"
 #include "frg_swap_chain.hpp"
 #include "frg_window.hpp"
 
@@ -36,10 +38,16 @@ class FrgRenderer {
     }
 
     VkCommandBuffer beginFrame();
-    void endFrame();
+    void endFrame(bool compute = false);
     void beginSwapChainRenderPass(VkCommandBuffer commandBuffer);
     void endSwapChainRenderPass(VkCommandBuffer commandBuffer);
-    void renderComputePipeline(VkCommandBuffer buffer);
+    void renderComputePipeline(
+        std::vector<VkCommandBuffer> &buffers, FrgDescriptor &desc, VkPipelineLayout pipe_layout, VkPipeline pipeline,
+        size_t particle_count, float dt, std::vector<void *> &ubos_mapped
+    );
+
+    // Delegate to swapchain
+    void delegateComputeBindAndDraw(VkCommandBuffer comm_buff, std::vector<VkBuffer> ssbos, uint32_t point_count);
 
   private:
     void createCommandBuffers();

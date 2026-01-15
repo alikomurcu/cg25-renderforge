@@ -64,7 +64,7 @@ void FrgDescriptor::create_comp_descriptor_set_layout_binding() {
 
     layout_bindings[2].binding = 2;
     layout_bindings[2].descriptorCount = 1;
-    layout_bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    layout_bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     layout_bindings[2].pImmutableSamplers = nullptr;
     layout_bindings[2].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
 
@@ -167,7 +167,6 @@ void FrgDescriptor::write_comp_descriptor_sets(
         throw std::runtime_error("failed to allocate compute descriptor sets!");
     }
 
-    // TODO: implement ubo
     for (uint32_t i = 0; i < layout_count; ++i) {
         VkDescriptorBufferInfo uniform_buffer_info{};
         uniform_buffer_info.buffer = uni_buffers[i];
@@ -209,7 +208,13 @@ void FrgDescriptor::write_comp_descriptor_sets(
         descriptor_writes[2].descriptorCount = 1;
         descriptor_writes[2].pBufferInfo = &storage_buffer_info_current_frame;
 
-        vkUpdateDescriptorSets(frg_device.device(), descriptor_writes.size(), descriptor_writes.data(), 0, nullptr);
+        vkUpdateDescriptorSets(
+            frg_device.device(),
+            static_cast<uint32_t>(descriptor_writes.size()),
+            descriptor_writes.data(),
+            0,
+            nullptr
+        );
     }
 }
 

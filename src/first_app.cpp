@@ -38,6 +38,8 @@ std::vector<VkDescriptorImageInfo> FirstApp::get_descriptors_of_game_objects() {
 
 void FirstApp::run() {
     SimpleRenderSystem simpleRenderSystem{frgDevice, frgRenderer.getSwapChainRenderPass(), frgDescriptor};
+    simpleRenderSystem.setup_ssbos(frgParticleDispenser);
+    simpleRenderSystem.set_up_compute_desc_sets(frgParticleDispenser.particle_count() * sizeof(Particle));
     FrgCamera camera{};
     // example camera setup
     camera.setViewTarget(glm::vec3{0.f, 0.f, -2.f}, glm::vec3{0.f, 0.f, 2.5f});
@@ -68,9 +70,22 @@ void FirstApp::run() {
             // processing pass, etc.
             frgRenderer.beginSwapChainRenderPass(commandBuffer);
             simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects, camera, frameTime);
-
+            frgRenderer.renderComputePipeline(
+                computeCommandBuffers,
+                frgDescriptor,
+                simpleRenderSystem.getComputeGraphicsPipelineLayout(),
+                simpleRenderSystem.getComputeGraphicsPipeline(),
+                frgParticleDispenser.particle_count(),
+                frameTime,
+                simpleRenderSystem.getUbosMapped()
+            );
+            frgRenderer.delegateComputeBindAndDraw(
+                commandBuffer,
+                simpleRenderSystem.getSSBOS(),
+                frgParticleDispenser.particle_count()
+            );
             frgRenderer.endSwapChainRenderPass(commandBuffer);
-            frgRenderer.endFrame();
+            frgRenderer.endFrame(true);
         }
     }
 
@@ -89,7 +104,7 @@ void FirstApp::loadGameObjects() {
         gameObjects.emplace_back(std::move(g_obj));
     }
 
-    gameObjects[0].transform.scale = glm::vec3{.01f, .01f, .01f};
+    // gameObjects[0].transform.scale = glm::vec3{.01f, .01f, .01f};
     gameObjects[0].transform.rotation.x = glm::pi<float>();
     gameObjects[0].transform.rotation.y = glm::pi<float>() / 2.0f;
     gameObjects[0].transform.translation.z = 0.7f;

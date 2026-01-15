@@ -13,17 +13,36 @@ FrgPipeline::FrgPipeline(
     const PipelineConfigInfo &configInfo
 )
     : frgDevice(device) {
-    createGraphicsPipeline(vertFilePath, fragFilePath, configInfo);
+    auto attr = Vertex::get_attribute_descriptions();
+    std::vector<VkVertexInputAttributeDescription> inp_attr(attr.begin(), attr.end());
+    createGraphicsPipeline(vertFilePath, fragFilePath, configInfo, Vertex::get_binding_descriptions(), inp_attr);
+}
+
+FrgPipeline::FrgPipeline(
+    FrgDevice &device, const std::string &vertFilePath, const std::string &fragFilePath,
+    const std::string &compFilePath, const PipelineConfigInfo &configInfo,
+    std::vector<VkDescriptorSetLayout> &desc_set_layouts
+)
+    : frgDevice{device} {
+    std::vector<VkVertexInputBindingDescription> desc = {Particle::getBindingDescription()};
+    auto attr = Particle::getAttributeDescriptions();
+    std::vector<VkVertexInputAttributeDescription> inp_attr(attr.begin(), attr.end());
+    createGraphicsPipeline(vertFilePath, fragFilePath, configInfo, desc, inp_attr);
+    createComputePipeline(compFilePath, desc_set_layouts);
+    create_shader_storage_buffers();
 }
 
 FrgPipeline::~FrgPipeline() {
     vkDestroyShaderModule(frgDevice.device(), vertShaderModule, nullptr);
     vkDestroyShaderModule(frgDevice.device(), fragShaderModule, nullptr);
-    vkDestroyShaderModule(frgDevice.device(), compShaderModule, nullptr);
+    if (compShaderModule != VK_NULL_HANDLE)
+        vkDestroyShaderModule(frgDevice.device(), compShaderModule, nullptr);
     vkDestroyPipeline(frgDevice.device(), graphicsPipeline, nullptr);
-    vkDestroyPipeline(frgDevice.device(), computePipeline, nullptr);
-    vkDestroyPipelineLayout(frgDevice.device(), computePipelineLayout, nullptr);
-    for (size_t i = 0; i < FrgSwapChain::MAX_FRAMES_IN_FLIGHT; ++i) {
+    if (computePipeline != VK_NULL_HANDLE)
+        vkDestroyPipeline(frgDevice.device(), computePipeline, nullptr);
+    if (computePipelineLayout != VK_NULL_HANDLE)
+        vkDestroyPipelineLayout(frgDevice.device(), computePipelineLayout, nullptr);
+    for (size_t i = 0; i < shader_storage_buffers.size(); ++i) {
         vkDestroyBuffer(frgDevice.device(), shader_storage_buffers[i], nullptr);
         vkFreeMemory(frgDevice.device(), shader_storage_buffers_memory[i], nullptr);
     }
@@ -46,7 +65,7 @@ std::vector<char> FrgPipeline::readFile(const std::string &filePath) {
     return buffer;
 }
 
-void FrgPipeline::createComputePipeline(const std::string &compFilePath, const VkDescriptorSetLayout *layouts) {
+void FrgPipeline::createComputePipeline(const std::string &compFilePath, std::vector<VkDescriptorSetLayout> &layouts) {
     auto compCode = readFile(compFilePath);
     createShaderModule(compCode, &compShaderModule);
 
@@ -59,7 +78,7 @@ void FrgPipeline::createComputePipeline(const std::string &compFilePath, const V
     VkPipelineLayoutCreateInfo pipeline_layout_info{};
     pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipeline_layout_info.setLayoutCount = 1;
-    pipeline_layout_info.pSetLayouts = layouts;
+    pipeline_layout_info.pSetLayouts = layouts.data();
 
     if (vkCreatePipelineLayout(frgDevice.device(), &pipeline_layout_info, nullptr, &computePipelineLayout) !=
         VK_SUCCESS)
@@ -79,7 +98,9 @@ void FrgPipeline::createComputePipeline(const std::string &compFilePath, const V
 }
 
 void FrgPipeline::createGraphicsPipeline(
-    const std::string &vertFilePath, const std::string &fragFilePath, const PipelineConfigInfo &configInfo
+    const std::string &vertFilePath, const std::string &fragFilePath, const PipelineConfigInfo &configInfo,
+    std::vector<VkVertexInputBindingDescription> input_binding_desc,
+    std::vector<VkVertexInputAttributeDescription> attr_desc
 ) {
 
     assert(
@@ -115,14 +136,12 @@ void FrgPipeline::createGraphicsPipeline(
     shaderStages[1].pNext = nullptr;
     shaderStages[1].pSpecializationInfo = nullptr;
 
-    auto bindingDescriptions = Vertex::get_binding_descriptions();
-    auto attributeDescriptions = Vertex::get_attribute_descriptions();
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size());
-    vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
-    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-    vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+    vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(input_binding_desc.size());
+    vertexInputInfo.pVertexBindingDescriptions = input_binding_desc.data();
+    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attr_desc.size());
+    vertexInputInfo.pVertexAttributeDescriptions = attr_desc.data();
 
     VkGraphicsPipelineCreateInfo pipelineInfo{};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -167,9 +186,14 @@ void FrgPipeline::bind(VkCommandBuffer commandBuffer) {
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 }
 
-void FrgPipeline::defaultPipelineConfigInfo(PipelineConfigInfo &configInfo) {
+void FrgPipeline::bindCompute(VkCommandBuffer commandBuffer) {
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computePipeline);
+}
+
+void FrgPipeline::defaultPipelineConfigInfo(PipelineConfigInfo &configInfo, bool compute) {
     configInfo.inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    configInfo.inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    configInfo.inputAssemblyInfo.topology =
+        compute ? VK_PRIMITIVE_TOPOLOGY_POINT_LIST : VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     configInfo.inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
 
     configInfo.viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;

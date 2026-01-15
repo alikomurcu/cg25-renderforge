@@ -18,8 +18,11 @@ class FrgDescriptor {
     FrgDescriptor &operator=(const FrgDescriptor &) = delete;
 
     const VkDescriptorSetLayout *descriptorSetLayout() { return &descriptor_set_layout; }
+    const VkDescriptorSetLayout *getComputeDescriptorSetLayout() { return &comp_desc_set_layout; }
     const VkDescriptorSet *descriptorSet() { return &descriptor_set; }
+    const std::vector<VkDescriptorSet> &getComputeDescriptorSet() { return comp_descriptor_set; }
     uint32_t descriptorSetCount() { return 1; }
+    uint32_t getComputeDescriptorSetCount() { return static_cast<uint32_t>(comp_descriptor_set.size()); }
 
     void write_descriptor_sets(const std::vector<VkDescriptorImageInfo> &image_infos);
     void write_comp_descriptor_sets(

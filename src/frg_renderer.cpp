@@ -83,14 +83,14 @@ VkCommandBuffer FrgRenderer::beginFrame() {
     return commandBuffer;
 }
 
-void FrgRenderer::endFrame() {
+void FrgRenderer::endFrame(bool compute) {
     assert(isFrameStarted && "Cannot call endFrame while frame not in progress");
     VkCommandBuffer commandBuffer = getCurrentCommandBuffer();
     if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to end recording command buffer!");
     }
 
-    auto result = frgSwapChain->submitCommandBuffers(&commandBuffer, &currentImageIndex);
+    auto result = frgSwapChain->submitCommandBuffers(&commandBuffer, &currentImageIndex, compute);
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || frgWindow.wasWindowResized()) {
         frgWindow.resetWindowResizedFlag();
@@ -147,5 +147,27 @@ void FrgRenderer::endSwapChainRenderPass(VkCommandBuffer commandBuffer) {
     );
 
     vkCmdEndRenderPass(commandBuffer);
+}
+void FrgRenderer::renderComputePipeline(
+    std::vector<VkCommandBuffer> &buffers, FrgDescriptor &desc, VkPipelineLayout pipe_layout, VkPipeline pipeline,
+    size_t particle_count, float dt, std::vector<void *> &ubos_mapped
+) {
+    UniformBufferObject ubo{};
+    ubo.deltaTime = dt;
+    auto fncPtr = std::bind(
+        &FrgDescriptor::recordComputeCommandBuffer,
+        &desc,
+        std::placeholders::_1,
+        pipe_layout,
+        pipeline,
+        particle_count,
+        std::placeholders::_5
+    );
+    frgSwapChain->submitComputeCommandBuffer(buffers, ubos_mapped, fncPtr, pipe_layout, pipeline, particle_count, ubo);
+}
+void FrgRenderer::delegateComputeBindAndDraw(
+    VkCommandBuffer comm_buff, std::vector<VkBuffer> ssbos, uint32_t point_count
+) {
+    frgSwapChain->bindAndDrawCompute(comm_buff, ssbos, point_count);
 }
 } // namespace frg

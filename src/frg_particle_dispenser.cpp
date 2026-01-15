@@ -50,4 +50,26 @@ void FrgParticleDispenser::cpy_host2dev(std::vector<VkBuffer> &buffers, std::vec
         m_device.copyBuffer(m_staging_buff, buffers[i], m_staging_buff_size);
     }
 }
+VkVertexInputBindingDescription Particle::getBindingDescription() {
+    VkVertexInputBindingDescription bindingDescription{};
+    bindingDescription.binding = 0;
+    bindingDescription.stride = sizeof(Particle);
+    bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+    return bindingDescription;
+}
+std::array<VkVertexInputAttributeDescription, 2> Particle::getAttributeDescriptions() {
+    std::array<VkVertexInputAttributeDescription, 2> attr_desc{};
+    attr_desc[0].binding = 0;
+    attr_desc[0].location = 0;
+    attr_desc[0].format = VK_FORMAT_R32G32_SFLOAT;
+    attr_desc[0].offset = offsetof(Particle, pos);
+
+    attr_desc[1].binding = 0;
+    attr_desc[1].location = 1;
+    attr_desc[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+    attr_desc[1].offset = offsetof(Particle, col);
+
+    return attr_desc;
+}
 } // namespace frg

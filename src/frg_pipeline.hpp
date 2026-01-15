@@ -34,6 +34,12 @@ class FrgPipeline {
         const PipelineConfigInfo &configInfo
     );
 
+    FrgPipeline(
+        FrgDevice &device, const std::string &vertFilePath, const std::string &fragFilePath,
+        const std::string &compFilePath, const PipelineConfigInfo &configInfo,
+        std::vector<VkDescriptorSetLayout> &desc_set_layouts
+    );
+
     ~FrgPipeline();
 
     // Delete copy constructor and copy assignment operator
@@ -41,25 +47,32 @@ class FrgPipeline {
     FrgPipeline &operator=(const FrgPipeline &) = delete;
 
     void bind(VkCommandBuffer commandBuffer);
-    static void defaultPipelineConfigInfo(PipelineConfigInfo &configInfo);
+    void bindCompute(VkCommandBuffer commandBuffer);
+    static void defaultPipelineConfigInfo(PipelineConfigInfo &configInfo, bool compute = false);
     void create_shader_storage_buffers();
+    VkPipelineLayout getComputePipelineLayout() { return computePipelineLayout; }
+    VkPipeline getComputePipeline() { return computePipeline; }
+    std::vector<VkBuffer> &getShaderStorageBuffers() { return shader_storage_buffers; }
+    std::vector<VkDeviceMemory> &getShaderStorageBuffersMemory() { return shader_storage_buffers_memory; }
 
   private:
     static std::vector<char> readFile(const std::string &filePath);
-    void createComputePipeline(const std::string &compFilePath, const VkDescriptorSetLayout *layouts);
+    void createComputePipeline(const std::string &compFilePath, std::vector<VkDescriptorSetLayout> &layouts);
     void createGraphicsPipeline(
-        const std::string &vertFilePath, const std::string &fragFilePath, const PipelineConfigInfo &configInfo
+        const std::string &vertFilePath, const std::string &fragFilePath, const PipelineConfigInfo &configInfo,
+        std::vector<VkVertexInputBindingDescription> input_binding_desc,
+        std::vector<VkVertexInputAttributeDescription> attr_desc
     );
 
     void createShaderModule(const std::vector<char> &code, VkShaderModule *shaderModule);
 
     FrgDevice &frgDevice;
     VkPipeline graphicsPipeline;
-    VkPipeline computePipeline;
-    VkPipelineLayout computePipelineLayout;
+    VkPipeline computePipeline = VK_NULL_HANDLE;
+    VkPipelineLayout computePipelineLayout = VK_NULL_HANDLE;
     VkShaderModule vertShaderModule;
     VkShaderModule fragShaderModule;
-    VkShaderModule compShaderModule;
+    VkShaderModule compShaderModule = VK_NULL_HANDLE;
     std::vector<VkBuffer> shader_storage_buffers;
     std::vector<VkDeviceMemory> shader_storage_buffers_memory;
 };

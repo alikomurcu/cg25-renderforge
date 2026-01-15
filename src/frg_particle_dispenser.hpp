@@ -4,17 +4,25 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/constants.hpp"
 #include <GLFW/glfw3.h>
+#include <array>
 #include <random>
 #include <time.h>
 
 #include "frg_device.hpp"
 
 namespace frg {
+
+struct UniformBufferObject {
+    float deltaTime = 1.0f;
+};
 struct Particle {
   public:
     glm::vec2 pos;
     glm::vec2 vel;
     glm::vec4 col;
+
+    static VkVertexInputBindingDescription getBindingDescription();
+    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();
 };
 class FrgParticleDispenser {
   public:

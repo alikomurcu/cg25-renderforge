@@ -11,8 +11,7 @@
 
 namespace frg {
 
-FrgSwapChain::FrgSwapChain(FrgDevice &deviceRef, VkExtent2D extent)
-    : device{deviceRef}, windowExtent{extent}, has_compute{false} {
+FrgSwapChain::FrgSwapChain(FrgDevice &deviceRef, VkExtent2D extent) : device{deviceRef}, windowExtent{extent} {
     init();
 }
 
@@ -22,6 +21,16 @@ FrgSwapChain::FrgSwapChain(FrgDevice &deviceRef, VkExtent2D extent, std::shared_
 
     // set old swap chain to null pointer since it is not needed
     oldSwapChain = nullptr;
+}
+
+void FrgSwapChain::updateUniformBuffer(std::vector<void *> &ubos, const UniformBufferObject &obj) {
+    memcpy(ubos[currentFrame], &obj, sizeof(obj));
+}
+
+void FrgSwapChain::bindAndDrawCompute(VkCommandBuffer comm_buff, std::vector<VkBuffer> ssbos, uint32_t point_count) {
+    VkDeviceSize offsets[] = {0};
+    vkCmdBindVertexBuffers(comm_buff, 0, 1, &ssbos[currentFrame], offsets);
+    vkCmdDraw(comm_buff, point_count, 1, 0, 0);
 }
 
 void FrgSwapChain::init() {
@@ -58,8 +67,10 @@ FrgSwapChain::~FrgSwapChain() {
 
     // cleanup synchronization objects
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        vkDestroySemaphore(device.device(), computeFinishedSemaphores[i], nullptr);
         vkDestroySemaphore(device.device(), imageAvailableSemaphores[i], nullptr);
         vkDestroyFence(device.device(), inFlightFences[i], nullptr);
+        vkDestroyFence(device.device(), inComputeFlightFences[i], nullptr);
     }
 
     for (size_t i = 0; i < swapChainImages.size(); ++i) {
@@ -83,7 +94,7 @@ VkResult FrgSwapChain::acquireNextImage(uint32_t *imageIndex) {
     return result;
 }
 
-VkResult FrgSwapChain::submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex) {
+VkResult FrgSwapChain::submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex, bool has_compute) {
     if (imagesInFlight[*imageIndex] != VK_NULL_HANDLE) {
         vkWaitForFences(device.device(), 1, &imagesInFlight[*imageIndex], VK_TRUE, UINT64_MAX);
     }
@@ -92,24 +103,23 @@ VkResult FrgSwapChain::submitCommandBuffers(const VkCommandBuffer *buffers, uint
     VkSubmitInfo submitInfo = {};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-    if (has_compute) {
-        VkSemaphore waitSemaphores[] = {
-            computeFinishedSemaphores[currentFrame],
-            imageAvailableSemaphores[currentFrame]
-        };
-        VkPipelineStageFlags waitStages[] = {
-            VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
-        };
-        submitInfo.waitSemaphoreCount = 2;
-    } else {
-        VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
+    std::vector<VkSemaphore> waitSemaphores;
+    std::vector<VkPipelineStageFlags> waitStages;
 
-        VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-        submitInfo.waitSemaphoreCount = 1;
+    if (has_compute) {
+        waitSemaphores.push_back(computeFinishedSemaphores[currentFrame]);
+        waitSemaphores.push_back(imageAvailableSemaphores[currentFrame]);
+        waitStages.push_back(VK_PIPELINE_STAGE_VERTEX_INPUT_BIT);
+        waitStages.push_back(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+        submitInfo.waitSemaphoreCount = waitSemaphores.size();
+    } else {
+        waitSemaphores.push_back(imageAvailableSemaphores[currentFrame]);
+
+        waitStages.push_back(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+        submitInfo.waitSemaphoreCount = waitSemaphores.size();
     }
-    submitInfo.pWaitSemaphores = waitSemaphores;
-    submitInfo.pWaitDstStageMask = waitStages;
+    submitInfo.pWaitSemaphores = waitSemaphores.data();
+    submitInfo.pWaitDstStageMask = waitStages.data();
 
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = buffers;
@@ -143,15 +153,15 @@ VkResult FrgSwapChain::submitCommandBuffers(const VkCommandBuffer *buffers, uint
 }
 // This function is a blashphemy - Aron
 void FrgSwapChain::submitComputeCommandBuffer(
-    std::vector<VkCommandBuffer> &buffers,
+    std::vector<VkCommandBuffer> &buffers, std::vector<void *> &ubos_mapped,
     std::function<void(VkCommandBuffer, VkPipelineLayout, VkPipeline, size_t, size_t)> renderFnc,
-    VkPipelineLayout layout, VkPipeline pipeline, size_t particle_count
+    VkPipelineLayout layout, VkPipeline pipeline, size_t particle_count, UniformBufferObject ubo
 ) {
-    has_compute = true;
     VkSubmitInfo submit_info{};
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
     vkWaitForFences(device.device(), 1, &inComputeFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+    updateUniformBuffer(ubos_mapped, ubo);
     vkResetFences(device.device(), 1, &inComputeFlightFences[currentFrame]);
 
     vkResetCommandBuffer(buffers[currentFrame], 0);

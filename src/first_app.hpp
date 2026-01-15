@@ -3,6 +3,7 @@
 #include "frg_descriptor.hpp"
 #include "frg_device.hpp"
 #include "frg_game_object.hpp"
+#include "frg_particle_dispenser.hpp"
 #include "frg_renderer.hpp"
 #include "frg_window.hpp"
 
@@ -24,7 +25,7 @@ class FirstApp {
     FirstApp &operator=(const FirstApp &) = delete;
 
     void run();
-
+    // TODO: Implement second pipeline that includes the compute stuff
   private:
     void loadGameObjects();
 
@@ -32,6 +33,7 @@ class FirstApp {
     FrgDevice frgDevice{frgWindow};
     FrgDescriptor frgDescriptor{frgDevice};
     FrgRenderer frgRenderer{frgWindow, frgDevice};
+    FrgParticleDispenser frgParticleDispenser{frgDevice, 8192, HEIGHT, WIDTH};
 
     std::vector<VkDescriptorImageInfo> get_descriptors_of_game_objects();
     std::vector<FrgGameObject> gameObjects;
