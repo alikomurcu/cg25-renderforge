@@ -23,6 +23,7 @@
 namespace frg {
 struct SimplePushConstantData {
   glm::mat4 transform{1.f};
+  glm::mat4 modelMatrix{1.f};
   glm::mat4 normalMat{1.f};
   glm::vec4 pointLightPosition{0.f, 0.f, 0.f, 1.f};
   glm::vec4 pointLightColor{1.f, 1.f, 1.f, 1.f}; // w is intensity

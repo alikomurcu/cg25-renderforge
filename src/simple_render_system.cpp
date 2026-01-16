@@ -85,6 +85,7 @@ void SimpleRenderSystem::renderGameObjects(
     SimplePushConstantData push{};
     auto modelMat = gameObject.transform.mat4();
     push.transform = projectionView * modelMat;
+    push.modelMatrix = modelMat;
     push.normalMat = gameObject.transform.normalMat();
     push.screenSize = glm::vec2(static_cast<float>(screenSize.width),
                                 static_cast<float>(screenSize.height));

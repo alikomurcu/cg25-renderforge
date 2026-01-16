@@ -20,191 +20,207 @@
 
 #include "scene_loader.hpp"
 
-namespace frg {
-FirstApp::FirstApp() {
-  loadGameObjects();
-  frgDescriptor.write_descriptor_sets(get_descriptors_of_game_objects());
-}
-
-FirstApp::~FirstApp() {}
-
-std::vector<VkDescriptorImageInfo> FirstApp::get_descriptors_of_game_objects() {
-  std::vector<VkDescriptorImageInfo> all_descriptor_infos{};
-  for (const auto &obj : gameObjects) {
-    std::vector<VkDescriptorImageInfo> tmp_infos = obj.model->get_descriptors();
-    all_descriptor_infos.insert(all_descriptor_infos.end(), tmp_infos.begin(),
-                                tmp_infos.end());
+namespace frg
+{
+  FirstApp::FirstApp()
+  {
+    loadGameObjects();
+    frgDescriptor.write_descriptor_sets(get_descriptors_of_game_objects());
   }
 
-  return all_descriptor_infos;
-}
+  FirstApp::~FirstApp() {}
 
-void FirstApp::run() {
-  // Get swap chain extent for G-buffer and SSAO - MUST match swap chain!
-  VkExtent2D extent = frgRenderer.getSwapChainExtent();
-  std::cout << "Swap chain extent: " << extent.width << "x" << extent.height
-            << std::endl;
+  std::vector<VkDescriptorImageInfo> FirstApp::get_descriptors_of_game_objects()
+  {
+    std::vector<VkDescriptorImageInfo> all_descriptor_infos{};
+    for (const auto &obj : gameObjects)
+    {
+      std::vector<VkDescriptorImageInfo> tmp_infos = obj.model->get_descriptors();
+      all_descriptor_infos.insert(all_descriptor_infos.end(), tmp_infos.begin(),
+                                  tmp_infos.end());
+    }
 
-  // Create G-buffer for deferred rendering (same size as swap chain)
-  FrgGBuffer gbuffer{frgDevice, extent};
+    return all_descriptor_infos;
+  }
 
-  // Create SSAO system (same size as swap chain)
-  FrgSSAO ssao{frgDevice, extent};
+  void FirstApp::run()
+  {
+    // Get swap chain extent for G-buffer and SSAO - MUST match swap chain!
+    VkExtent2D extent = frgRenderer.getSwapChainExtent();
+    std::cout << "Swap chain extent: " << extent.width << "x" << extent.height
+              << std::endl;
 
-  // Create SSAO render system (manages G-buffer, SSAO, and blur passes)
-  SSAORenderSystem ssaoRenderSystem{frgDevice, gbuffer, ssao};
+    // Create G-buffer for deferred rendering (same size as swap chain)
+    FrgGBuffer gbuffer{frgDevice, extent};
 
-  // Create the main render system for final lighting
-  SimpleRenderSystem simpleRenderSystem{
-      frgDevice, frgRenderer.getSwapChainRenderPass(), frgDescriptor};
-  FrgCamera camera{};
-  // example camera setup
-  camera.setViewTarget(glm::vec3{0.f, 0.f, -2.f}, glm::vec3{0.f, 0.f, 2.5f});
-  auto viewerObject = FrgGameObject::createGameObject();
-  KeyboardMovementController cameraController;
+    // Create SSAO system (same size as swap chain)
+    FrgSSAO ssao{frgDevice, extent};
 
-  // Camera Animation System Setup
-  CameraAnimationSystem cameraAnimationSystem;
-  // Create a circular path around the viking room at (0,0,2)
-  // Radius ~3.0
-  // t=0: Start position
-  cameraAnimationSystem.addKeyframe(0.f, glm::vec3{0.f, 0.f, -1.f},
-                                    glm::vec3{0.f, 0.f, 0.f});
-  // t=2.5: Middle position
-  cameraAnimationSystem.addKeyframe(2.5f, glm::vec3{3.f, 0.f, 2.f},
-                                    glm::vec3{0.f, -1.57f, 0.f});
-  // t=5.0: Return to start position (Back and Forth loop)
-  cameraAnimationSystem.addKeyframe(5.0f, glm::vec3{0.f, 0.f, -1.f},
-                                    glm::vec3{0.f, 0.f, 0.f});
+    // Create SSAO render system (manages G-buffer, SSAO, and blur passes)
+    SSAORenderSystem ssaoRenderSystem{frgDevice, gbuffer, ssao};
 
-  bool isAutoCamera = true; // Start with animation enabled
-  bool mKeyWasPressed = false;
-  float animationTime = 0.f;
+    // Create the main render system for final lighting
+    SimpleRenderSystem simpleRenderSystem{
+        frgDevice, frgRenderer.getSwapChainRenderPass(), frgDescriptor};
+    FrgCamera camera{};
+    // example camera setup
+    camera.setViewTarget(glm::vec3{0.f, 0.f, -2.f}, glm::vec3{0.f, 0.f, 2.5f});
+    auto viewerObject = FrgGameObject::createGameObject();
+    KeyboardMovementController cameraController;
 
-  auto curTime = std::chrono::high_resolution_clock::now();
+    // Camera Animation System Setup
+    CameraAnimationSystem cameraAnimationSystem;
+    // Create a circular path around the viking room at (0,0,2)
+    // Radius ~3.0
+    // t=0: Start position
+    cameraAnimationSystem.addKeyframe(0.f, glm::vec3{0.f, 0.f, -1.f},
+                                      glm::vec3{0.f, 0.f, 0.f});
+    // t=2.5: Middle position
+    cameraAnimationSystem.addKeyframe(2.5f, glm::vec3{3.f, 0.f, 2.f},
+                                      glm::vec3{0.f, -1.57f, 0.f});
+    // t=5.0: Return to start position (Back and Forth loop)
+    cameraAnimationSystem.addKeyframe(5.0f, glm::vec3{0.f, 0.f, -1.f},
+                                      glm::vec3{0.f, 0.f, 0.f});
 
-  // Add a point light to the scene
-  simpleRenderSystem.getLightManager().addPointLight(
-      glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 1.f, 1.f), 1.f, 3.f);
+    bool isAutoCamera = true; // Start with animation enabled
+    bool mKeyWasPressed = false;
+    float animationTime = 0.f;
 
-  // Wire the blurred SSAO texture to the descriptor set for final lighting
-  VkDescriptorImageInfo ssaoDescriptor = ssao.getBlurredDescriptor();
-  frgDescriptor.setSSAOTexture(ssaoDescriptor);
+    auto curTime = std::chrono::high_resolution_clock::now();
 
-  // SSAO toggle (press 'O' to toggle)
-  bool ssaoEnabled = true;
-  bool oKeyWasPressed = false;
+    // Add a point light to the scene
+    simpleRenderSystem.getLightManager().addPointLight(
+        glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 1.f, 1.f), 1.f, 3.f);
 
-  // Debug mode toggle (press 'D' to cycle)
-  // 0=normal, 1=SSAO only, 2=normals, 3=depth
-  int debugMode = 0;
-  bool cKeyWasPressed = false;
+    // Wire the blurred SSAO texture to the descriptor set for final lighting
+    VkDescriptorImageInfo ssaoDescriptor = ssao.getBlurredDescriptor();
+    frgDescriptor.setSSAOTexture(ssaoDescriptor);
 
-  std::cout << "\n=== Controls ===\n";
-  std::cout << "M: Toggle Camera Animation (Auto/Manual)\n";
-  std::cout << "WASD: Move camera (Manual mode)\n";
-  std::cout << "Arrow keys: Look around (Manual mode)\n";
-  std::cout << "O: Toggle SSAO\n";
-  std::cout << "C: Cycle debug mode (Normal/SSAO/Normals/Depth)\n";
-  std::cout << "================\n\n";
+    // SSAO toggle (press 'O' to toggle)
+    bool ssaoEnabled = true;
+    bool oKeyWasPressed = false;
 
-  while (!frgWindow.shouldClose()) {
-    glfwPollEvents();
+    // Debug mode toggle (press 'D' to cycle)
+    // 0=normal, 1=SSAO only, 2=normals, 3=depth
+    int debugMode = 0;
+    bool cKeyWasPressed = false;
 
-    // Check for Camera Mode toggle (M key)
-    bool mKeyPressed =
-        glfwGetKey(frgWindow.getGLFWwindow(), GLFW_KEY_M) == GLFW_PRESS;
-    if (mKeyPressed && !mKeyWasPressed) {
-      isAutoCamera = !isAutoCamera;
-      std::cout << "Camera Mode: "
-                << (isAutoCamera ? "Auto (Animation)" : "Manual") << std::endl;
-      // Reset animation time when switching to auto? Or keep it running?
-      // Let's reset to restart the cinematic feel.
+    std::cout << "\n=== Controls ===\n";
+    std::cout << "M: Toggle Camera Animation (Auto/Manual)\n";
+    std::cout << "WASD: Move camera (Manual mode)\n";
+    std::cout << "Arrow keys: Look around (Manual mode)\n";
+    std::cout << "O: Toggle SSAO\n";
+    std::cout << "C: Cycle debug mode (Normal/SSAO/Normals/Depth)\n";
+    std::cout << "================\n\n";
+
+    while (!frgWindow.shouldClose())
+    {
+      glfwPollEvents();
+
+      // Check for Camera Mode toggle (M key)
+      bool mKeyPressed =
+          glfwGetKey(frgWindow.getGLFWwindow(), GLFW_KEY_M) == GLFW_PRESS;
+      if (mKeyPressed && !mKeyWasPressed)
+      {
+        isAutoCamera = !isAutoCamera;
+        std::cout << "Camera Mode: "
+                  << (isAutoCamera ? "Auto (Animation)" : "Manual") << std::endl;
+        // Reset animation time when switching to auto? Or keep it running?
+        // Let's reset to restart the cinematic feel.
+        if (isAutoCamera)
+          animationTime = 0.f;
+      }
+      mKeyWasPressed = mKeyPressed;
+
+      // Check for SSAO toggle (O key) - detect key press, not hold
+      bool oKeyPressed =
+          glfwGetKey(frgWindow.getGLFWwindow(), GLFW_KEY_O) == GLFW_PRESS;
+      if (oKeyPressed && !oKeyWasPressed)
+      {
+        ssaoEnabled = !ssaoEnabled;
+        std::cout << "SSAO: " << (ssaoEnabled ? "ON" : "OFF") << std::endl;
+      }
+      oKeyWasPressed = oKeyPressed;
+
+      // Check for debug mode toggle (C key)
+      bool cKeyPressed =
+          glfwGetKey(frgWindow.getGLFWwindow(), GLFW_KEY_C) == GLFW_PRESS;
+      if (cKeyPressed && !cKeyWasPressed)
+      {
+        debugMode = (debugMode + 1) % 4;
+        const char *modeNames[] = {"Normal", "SSAO Only", "Normals", "Depth"};
+        std::cout << "Debug Mode: " << modeNames[debugMode] << std::endl;
+      }
+      cKeyWasPressed = cKeyPressed;
+
+      float aspect = frgRenderer.getAspectRatio();
+      auto newTime = std::chrono::high_resolution_clock::now();
+      float frameTime =
+          std::chrono::duration<float, std::chrono::seconds::period>(newTime -
+                                                                     curTime)
+              .count();
+      curTime = newTime;
+
       if (isAutoCamera)
-        animationTime = 0.f;
-    }
-    mKeyWasPressed = mKeyPressed;
-
-    // Check for SSAO toggle (O key) - detect key press, not hold
-    bool oKeyPressed =
-        glfwGetKey(frgWindow.getGLFWwindow(), GLFW_KEY_O) == GLFW_PRESS;
-    if (oKeyPressed && !oKeyWasPressed) {
-      ssaoEnabled = !ssaoEnabled;
-      std::cout << "SSAO: " << (ssaoEnabled ? "ON" : "OFF") << std::endl;
-    }
-    oKeyWasPressed = oKeyPressed;
-
-    // Check for debug mode toggle (C key)
-    bool cKeyPressed =
-        glfwGetKey(frgWindow.getGLFWwindow(), GLFW_KEY_C) == GLFW_PRESS;
-    if (cKeyPressed && !cKeyWasPressed) {
-      debugMode = (debugMode + 1) % 4;
-      const char *modeNames[] = {"Normal", "SSAO Only", "Normals", "Depth"};
-      std::cout << "Debug Mode: " << modeNames[debugMode] << std::endl;
-    }
-    cKeyWasPressed = cKeyPressed;
-
-    float aspect = frgRenderer.getAspectRatio();
-    auto newTime = std::chrono::high_resolution_clock::now();
-    float frameTime =
-        std::chrono::duration<float, std::chrono::seconds::period>(newTime -
-                                                                   curTime)
-            .count();
-    curTime = newTime;
-
-    if (isAutoCamera) {
-      animationTime += frameTime;
-      // Loop the animation
-      if (animationTime > 5.f) {
-        animationTime = 0.f; // Simple loop
+      {
+        animationTime += frameTime;
+        // Loop the animation
+        if (animationTime > 5.f)
+        {
+          animationTime = 0.f; // Simple loop
+        }
+        cameraAnimationSystem.update(animationTime, viewerObject);
       }
-      cameraAnimationSystem.update(animationTime, viewerObject);
-    } else {
-      cameraController.moveInPlaneXZ(frgWindow.getGLFWwindow(), frameTime,
-                                     viewerObject);
-    }
-
-    camera.setViewYXZ(viewerObject.transform.translation,
-                      viewerObject.transform.rotation);
-
-    camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
-
-    if (auto commandBuffer = frgRenderer.beginFrame()) {
-      if (ssaoEnabled) {
-        // === PASS 1: G-Buffer ===
-        // Render scene to position and normal textures
-        ssaoRenderSystem.beginGBufferPass(commandBuffer);
-        ssaoRenderSystem.renderGBuffer(commandBuffer, gameObjects, camera);
-        ssaoRenderSystem.endGBufferPass(commandBuffer);
-
-        // === PASS 2: SSAO Calculation ===
-        // Calculate ambient occlusion from G-buffer
-        ssaoRenderSystem.beginSSAOPass(commandBuffer);
-        ssaoRenderSystem.renderSSAO(commandBuffer, camera);
-        ssaoRenderSystem.endSSAOPass(commandBuffer);
-
-        // === PASS 3: Blur ===
-        // Blur the noisy SSAO output
-        ssaoRenderSystem.beginBlurPass(commandBuffer);
-        ssaoRenderSystem.renderBlur(commandBuffer);
-        ssaoRenderSystem.endBlurPass(commandBuffer);
+      else
+      {
+        cameraController.moveInPlaneXZ(frgWindow.getGLFWwindow(), frameTime,
+                                       viewerObject);
       }
 
-      // === PASS 4: Final Lighting ===
-      // Render the scene with lighting (uses blurred SSAO for ambient)
-      frgRenderer.beginSwapChainRenderPass(commandBuffer);
-      simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects, camera,
-                                           frameTime, extent, debugMode);
+      camera.setViewYXZ(viewerObject.transform.translation,
+                        viewerObject.transform.rotation);
 
-      frgRenderer.endSwapChainRenderPass(commandBuffer);
-      frgRenderer.endFrame();
+      camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
+
+      if (auto commandBuffer = frgRenderer.beginFrame())
+      {
+        if (ssaoEnabled)
+        {
+          // === PASS 1: G-Buffer ===
+          // Render scene to position and normal textures
+          ssaoRenderSystem.beginGBufferPass(commandBuffer);
+          ssaoRenderSystem.renderGBuffer(commandBuffer, gameObjects, camera);
+          ssaoRenderSystem.endGBufferPass(commandBuffer);
+
+          // === PASS 2: SSAO Calculation ===
+          // Calculate ambient occlusion from G-buffer
+          ssaoRenderSystem.beginSSAOPass(commandBuffer);
+          ssaoRenderSystem.renderSSAO(commandBuffer, camera);
+          ssaoRenderSystem.endSSAOPass(commandBuffer);
+
+          // === PASS 3: Blur ===
+          // Blur the noisy SSAO output
+          ssaoRenderSystem.beginBlurPass(commandBuffer);
+          ssaoRenderSystem.renderBlur(commandBuffer);
+          ssaoRenderSystem.endBlurPass(commandBuffer);
+        }
+
+        // === PASS 4: Final Lighting ===
+        // Render the scene with lighting (uses blurred SSAO for ambient)
+        frgRenderer.beginSwapChainRenderPass(commandBuffer);
+        simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects, camera,
+                                             frameTime, extent, debugMode);
+
+        frgRenderer.endSwapChainRenderPass(commandBuffer);
+        frgRenderer.endFrame();
+      }
     }
+
+    vkDeviceWaitIdle(frgDevice.device());
   }
 
-  vkDeviceWaitIdle(frgDevice.device());
-}
-
-void FirstApp::loadGameObjects() {
-  SceneLoader::load(frgDevice, "../resources/scenes/scene0.xml", gameObjects);
-}
+  void FirstApp::loadGameObjects()
+  {
+    SceneLoader::load(frgDevice, "../resources/scenes/scene0.xml", gameObjects);
+  }
 } // namespace frg

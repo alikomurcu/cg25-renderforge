@@ -10,7 +10,8 @@ layout(location = 2) out vec3 fragWorldPos;
 
 // Push constants - MUST match triangle.frag exactly!
 layout(push_constant) uniform Push {
-  mat4 transform;
+  mat4 transform; // transform is actually projection * view * model
+  mat4 modelMatrix;
   mat4 normalMat;
   vec4 pointLightPosition;
   vec4 pointLightColor; // w component is intensity
@@ -24,5 +25,5 @@ void main() {
   gl_Position = push.transform * vec4(position, 1.0);
   fragNormal = normalize(mat3(push.normalMat) * normal);
   frag_tex_coord = tex_coord;
-  fragWorldPos = (push.transform * vec4(position, 1.0)).xyz;
+  fragWorldPos = (push.modelMatrix * vec4(position, 1.0)).xyz;
 }

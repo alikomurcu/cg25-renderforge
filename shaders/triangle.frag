@@ -12,7 +12,8 @@ layout(location = 0) out vec4 outColor;
 
 // Push constants - MUST match triangle.vert exactly!
 layout(push_constant) uniform Push {
-  mat4 transform;
+  mat4 transform; // transform is actually projection * view * model
+  mat4 modelMatrix;
   mat4 normalMat;
   vec4 pointLightPosition;
   vec4 pointLightColor; // w component is intensity
