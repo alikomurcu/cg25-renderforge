@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene>
+    <Settings>
+        <AutoCamera enabled="true" />
+        <SSAO enabled="true" />
+        <DebugMode value="0" />
+    </Settings>
+
+    <GameObject model="../resources/models/viking_room/viking_room.obj">
+        <Transform>
+            <Translation x="0.0" y="0.0" z="2.0" />
+            <Rotation x="-1.570796" y="0.0" z="0.0" />
+            <Scale x="1.0" y="1.0" z="1.0" />
+        </Transform>
+    </GameObject>
+
+    <GameObject model="../resources/models/psx_garage/scene.gltf">
+        <Transform>
+            <Translation x="0.0" y="-0.5" z="5.0" />
+            <Rotation x="0.0" y="0.0" z="0.0" />
+            <Scale x="2.0" y="2.0" z="2.0" />
+        </Transform>
+    </GameObject>
+
+    <!-- <GameObject model="../resources/models/ground/ground.obj">
+        <Transform>
+            <Translation x="0.0" y="0.5" z="0.0" />
+            <Rotation x="0.0" y="0.0" z="0.0" />
+            <Scale x="2.0" y="1.0" z="2.0" />
+        </Transform>
+    </GameObject> -->
+
+    <GameObject model="../resources/models/abandoned_car/scene.gltf">
+        <Transform>
+            <Translation x="2.0" y="0.5" z="5.0" />
+            <Rotation x="-1.57" y="0.0" z="-0.5" />
+            <Scale x="0.1" y="0.1" z="0.1" />
+        </Transform>
+    </GameObject>
+    <Camera>
+        <Transform>
+            <Translation x="0.0" y="-1.0" z="-1.0" />
+            <Rotation x="0.0" y="0.0" z="0.0" />
+        </Transform>
+    </Camera>
+
+    <Light type="Point">
+        <Position x="0.0" y="-2.0" z="0.0" />
+        <Color r="1.0" g="1.0" b="1.0" intensity="1.0" />
+    </Light>
+
+    <GameObject model="../resources/models/ground-new/ground.obj">
+        <Transform>
+            <Translation x="0.0" y="0.0" z="0.0" />
+            <Rotation x="0.0" y="0.0" z="0.0" />
+            <Scale x="2.0" y="1.0" z="2.0" />
+        </Transform>
+    </GameObject>
+</Scene>

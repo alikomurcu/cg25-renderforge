@@ -15,7 +15,7 @@ namespace frg {
 class SimpleRenderSystem {
 public:
   SimpleRenderSystem(FrgDevice &device, VkRenderPass renderPass,
-                     FrgDescriptor &descriptor);
+                     FrgDescriptor &descriptor, LightManager &lightManager);
   ~SimpleRenderSystem();
 
   SimpleRenderSystem(const SimpleRenderSystem &) = delete;
@@ -26,7 +26,7 @@ public:
                          VkExtent2D screenSize, int debugMode = 0);
 
   // Lighting interface
-  LightManager &getLightManager() { return light_manager; }
+  LightManager &getLightManager() { return lightManager; }
 
 private:
   void createPipelineLayout();
@@ -34,7 +34,7 @@ private:
 
   FrgDevice &frgDevice;
   FrgDescriptor &frgDescriptor;
-  LightManager light_manager;
+  LightManager &lightManager;
 
   std::unique_ptr<FrgPipeline> frgPipeline;
   VkPipelineLayout pipelineLayout;

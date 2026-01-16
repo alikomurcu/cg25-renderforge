@@ -4,9 +4,11 @@
 #include "frg_device.hpp"
 #include "frg_game_object.hpp"
 #include "frg_gbuffer.hpp"
+#include "frg_lighting.hpp"
 #include "frg_renderer.hpp"
 #include "frg_ssao.hpp"
 #include "frg_window.hpp"
+#include "scene_loader.hpp"
 #include "ssao_render_system.hpp"
 
 // std
@@ -38,6 +40,9 @@ private:
 
   std::vector<VkDescriptorImageInfo> get_descriptors_of_game_objects();
   std::vector<FrgGameObject> gameObjects;
+  FrgGameObject viewerObject{FrgGameObject::createGameObject()};
+  LightManager lightManager;
+  SceneSettings sceneSettings;
   uint32_t globalTextureIndex{0};
 };
 } // namespace frg

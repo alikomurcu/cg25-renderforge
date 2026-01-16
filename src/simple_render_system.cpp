@@ -15,8 +15,10 @@ namespace frg {
 
 SimpleRenderSystem::SimpleRenderSystem(FrgDevice &device,
                                        VkRenderPass renderPass,
-                                       FrgDescriptor &descriptor)
-    : frgDevice{device}, frgDescriptor{descriptor} {
+                                       FrgDescriptor &descriptor,
+                                       LightManager &lightManagerPtr)
+    : frgDevice{device}, frgDescriptor{descriptor},
+      lightManager{lightManagerPtr} {
   createPipelineLayout();
   createPipeline(renderPass);
 }
@@ -77,8 +79,8 @@ void SimpleRenderSystem::renderGameObjects(
       glm::vec3(radius * glm::cos(angle), 1.5f, radius * glm::sin(angle));
 
   // Update the light manager with the orbiting point light
-  if (light_manager.getPointLightCount() > 0) {
-    light_manager.updatePointLight(0, lightPos);
+  if (lightManager.getPointLightCount() > 0) {
+    lightManager.updatePointLight(0, lightPos);
   }
 
   for (auto &gameObject : gameObjects) {
@@ -92,7 +94,7 @@ void SimpleRenderSystem::renderGameObjects(
     push.debugMode = debugMode;
 
     // Get light data from manager
-    LightData lightData = light_manager.getLightData();
+    LightData lightData = lightManager.getLightData();
     if (lightData.pointLightCount > 0) {
       push.pointLightPosition = lightData.pointLights[0].position;
       push.pointLightColor = lightData.pointLights[0].color;
