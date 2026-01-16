@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scene>
     <Settings>
-        <AutoCamera enabled="true" />
+        <AutoCamera enabled="false" />
         <SSAO enabled="true" />
         <DebugMode value="0" />
     </Settings>
@@ -9,16 +9,16 @@
     <GameObject model="../resources/models/viking_room/viking_room.obj">
         <Transform>
             <Translation x="0.0" y="0.0" z="2.0" />
-            <Rotation x="-1.570796" y="0.0" z="0.0" />
+            <Rotation x="0.0" y="-1.57" z="0.0" />
             <Scale x="1.0" y="1.0" z="1.0" />
         </Transform>
     </GameObject>
 
     <GameObject model="../resources/models/psx_garage/scene.gltf">
         <Transform>
-            <Translation x="0.0" y="-0.5" z="5.0" />
-            <Rotation x="0.0" y="0.0" z="0.0" />
-            <Scale x="2.0" y="2.0" z="2.0" />
+            <Translation x="0.0" y="-1.65" z="-2.0" />
+            <Rotation x="0.0" y="1.57" z="0.0" />
+            <Scale x="10.0" y="10.0" z="10.0" />
         </Transform>
     </GameObject>
 
@@ -32,8 +32,8 @@
 
     <GameObject model="../resources/models/abandoned_car/scene.gltf">
         <Transform>
-            <Translation x="2.0" y="0.5" z="5.0" />
-            <Rotation x="-1.57" y="0.0" z="-0.5" />
+            <Translation x="2.0" y="0.0" z="-2.5" />
+            <Rotation x="0.0" y="3.14" z="3.141" />
             <Scale x="0.1" y="0.1" z="0.1" />
         </Transform>
     </GameObject>
@@ -46,14 +46,21 @@
 
     <Light type="Point">
         <Position x="0.0" y="-2.0" z="0.0" />
-        <Color r="1.0" g="1.0" b="1.0" intensity="1.0" />
+        <Color r="1.0" g="1.0" b="1.0" intensity="3.0" />
     </Light>
 
-    <GameObject model="../resources/models/ground-new/ground.obj">
+    <GameObject model="../resources/models/ground/terrain.obj">
         <Transform>
             <Translation x="0.0" y="0.0" z="0.0" />
-            <Rotation x="0.0" y="0.0" z="0.0" />
             <Scale x="2.0" y="1.0" z="2.0" />
+            <Rotation x="0.0" y="0.0" z="0.0" />
+        </Transform>
+    </GameObject>
+    <GameObject model="../resources/models/ground/road.obj">
+        <Transform>
+            <Translation x="0.0" y="0.0" z="0.0" />
+            <Scale x="2.0" y="1.0" z="2.0" />
+            <Rotation x="0.0" y="0.0" z="0.0" />
         </Transform>
     </GameObject>
 </Scene>

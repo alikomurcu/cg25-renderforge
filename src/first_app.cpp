@@ -85,8 +85,6 @@ void FirstApp::run() {
 
   auto curTime = std::chrono::high_resolution_clock::now();
 
-  // Lights are now loaded from XML via SceneLoader/loadGameObjects
-
   // Wire the blurred SSAO texture to the descriptor set for final lighting
   VkDescriptorImageInfo ssaoDescriptor = ssao.getBlurredDescriptor();
   frgDescriptor.setSSAOTexture(ssaoDescriptor);
@@ -187,6 +185,13 @@ void FirstApp::run() {
         // Blur the noisy SSAO output
         ssaoRenderSystem.beginBlurPass(commandBuffer);
         ssaoRenderSystem.renderBlur(commandBuffer);
+        ssaoRenderSystem.endBlurPass(commandBuffer);
+      } else {
+        // If SSAO is disabled, we still need to clear the texture that the
+        // lighting pass reads from. The blur pass RenderPass is configured to
+        // loadOp = CLEAR (to white 1.0) So just beginning and ending the pass
+        // is enough to clear it.
+        ssaoRenderSystem.beginBlurPass(commandBuffer);
         ssaoRenderSystem.endBlurPass(commandBuffer);
       }
 

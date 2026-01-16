@@ -1,0 +1,32 @@
+# Blender 4.4.0 MTL File: 'None'
+# www.blender.org
+
+newmtl lambert17
+Ns 159.999985
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd lambert17_baseColor.png
+
+newmtl lambert19
+Ns 159.999985
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd lambert19_baseColor.png
+
+newmtl lambert20
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.172368 0.172368 0.172368
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd lambert20_baseColor.png
