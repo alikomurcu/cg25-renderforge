@@ -27,7 +27,7 @@ void FrgSwapChain::updateUniformBuffer(std::vector<void *> &ubos, const UniformB
     memcpy(ubos[currentFrame], &obj, sizeof(obj));
 }
 
-void FrgSwapChain::bindAndDrawCompute(VkCommandBuffer comm_buff, std::vector<VkBuffer> ssbos, uint32_t point_count) {
+void FrgSwapChain::bindAndDrawCompute(VkCommandBuffer comm_buff, std::vector<VkBuffer> &ssbos, uint32_t point_count) {
     VkDeviceSize offsets[] = {0};
     vkCmdBindVertexBuffers(comm_buff, 0, 1, &ssbos[currentFrame], offsets);
     vkCmdDraw(comm_buff, point_count, 1, 0, 0);

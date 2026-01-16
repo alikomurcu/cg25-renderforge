@@ -33,7 +33,7 @@ class FirstApp {
     FrgDevice frgDevice{frgWindow};
     FrgDescriptor frgDescriptor{frgDevice};
     FrgRenderer frgRenderer{frgWindow, frgDevice};
-    FrgParticleDispenser frgParticleDispenser{frgDevice, 8192, HEIGHT, WIDTH};
+    FrgParticleDispenser frgParticleDispenser{frgDevice, 131072, HEIGHT, WIDTH};
 
     std::vector<VkDescriptorImageInfo> get_descriptors_of_game_objects();
     std::vector<FrgGameObject> gameObjects;

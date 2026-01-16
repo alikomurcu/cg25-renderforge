@@ -166,7 +166,7 @@ void FrgRenderer::renderComputePipeline(
     frgSwapChain->submitComputeCommandBuffer(buffers, ubos_mapped, fncPtr, pipe_layout, pipeline, particle_count, ubo);
 }
 void FrgRenderer::delegateComputeBindAndDraw(
-    VkCommandBuffer comm_buff, std::vector<VkBuffer> ssbos, uint32_t point_count
+    VkCommandBuffer comm_buff, std::vector<VkBuffer> &ssbos, uint32_t point_count
 ) {
     frgSwapChain->bindAndDrawCompute(comm_buff, ssbos, point_count);
 }

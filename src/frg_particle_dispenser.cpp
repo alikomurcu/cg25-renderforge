@@ -13,7 +13,7 @@ FrgParticleDispenser::FrgParticleDispenser(FrgDevice &device, uint32_t particle_
         float x = r * cos(theta) * h / w;
         float y = r * sin(theta);
         particle.pos = glm::vec2(x, y);
-        particle.vel = glm::normalize(glm::vec2(x, y)) * 0.00025f;
+        particle.vel = glm::normalize(glm::vec2(x, y)) * 0.25f;
         particle.col = glm::vec4(rnd_dist(rnd_eng), rnd_dist(rnd_eng), rnd_dist(rnd_eng), 1.0f);
     }
 
@@ -67,7 +67,7 @@ std::array<VkVertexInputAttributeDescription, 2> Particle::getAttributeDescripti
 
     attr_desc[1].binding = 0;
     attr_desc[1].location = 1;
-    attr_desc[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+    attr_desc[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
     attr_desc[1].offset = offsetof(Particle, col);
 
     return attr_desc;

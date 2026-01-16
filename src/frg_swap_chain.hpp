@@ -52,7 +52,7 @@ class FrgSwapChain {
     }
 
     void updateUniformBuffer(std::vector<void *> &ubos, const UniformBufferObject &obj);
-    void bindAndDrawCompute(VkCommandBuffer comm_buff, std::vector<VkBuffer> ssbos, uint32_t point_count);
+    void bindAndDrawCompute(VkCommandBuffer comm_buff, std::vector<VkBuffer> &ssbos, uint32_t point_count);
 
   private:
     void init();

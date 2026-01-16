@@ -32,7 +32,8 @@ class SimpleRenderSystem {
     std::vector<void *> &getUbosMapped() { return ubos_mapped; }
     void set_up_compute_desc_sets(size_t ssbo_size);
     void setup_ssbos(FrgParticleDispenser &dispenser);
-    std::vector<VkBuffer> getSSBOS() { return frgComputePipeline->getShaderStorageBuffers(); }
+    std::vector<VkBuffer> &getSSBOS() { return frgComputePipeline->getShaderStorageBuffers(); }
+    void bindComputeGraphicsPipeline(VkCommandBuffer buff);
 
   private:
     void createPipelineLayout();

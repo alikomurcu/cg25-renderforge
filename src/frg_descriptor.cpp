@@ -240,7 +240,7 @@ void FrgDescriptor::recordComputeCommandBuffer(
         0,
         nullptr
     );
-    vkCmdDispatch(command_buf, dispatch, 1, 1);
+    vkCmdDispatch(command_buf, dispatch / 256, 1, 1);
     if (vkEndCommandBuffer(command_buf) != VK_SUCCESS) {
         throw std::runtime_error("failed to record compute command buffer!");
     }

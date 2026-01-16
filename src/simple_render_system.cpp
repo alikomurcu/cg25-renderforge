@@ -48,6 +48,8 @@ void SimpleRenderSystem::setup_ssbos(FrgParticleDispenser &dispenser) {
     );
 }
 
+void SimpleRenderSystem::bindComputeGraphicsPipeline(VkCommandBuffer buff) { frgComputePipeline->bind(buff); }
+
 void SimpleRenderSystem::createPipelineLayout() {
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;

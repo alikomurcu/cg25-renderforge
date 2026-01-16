@@ -47,7 +47,7 @@ class FrgRenderer {
     );
 
     // Delegate to swapchain
-    void delegateComputeBindAndDraw(VkCommandBuffer comm_buff, std::vector<VkBuffer> ssbos, uint32_t point_count);
+    void delegateComputeBindAndDraw(VkCommandBuffer comm_buff, std::vector<VkBuffer> &ssbos, uint32_t point_count);
 
   private:
     void createCommandBuffers();

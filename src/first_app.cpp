@@ -70,6 +70,7 @@ void FirstApp::run() {
             // processing pass, etc.
             frgRenderer.beginSwapChainRenderPass(commandBuffer);
             simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects, camera, frameTime);
+            simpleRenderSystem.bindComputeGraphicsPipeline(commandBuffer);
             frgRenderer.renderComputePipeline(
                 computeCommandBuffers,
                 frgDescriptor,
