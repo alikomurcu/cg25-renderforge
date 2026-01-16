@@ -24,9 +24,15 @@ FetchContent_MakeAvailable(assimp)
 
 # --- stb_image ---
 FetchContent_Declare(stb
-GIT_REPOSITORY https://github.com/nothings/stb.git
-GIT_TAG master)
+    GIT_REPOSITORY https://github.com/nothings/stb.git
+    GIT_TAG master)
 FetchContent_MakeAvailable(stb)
+
+# --- tinyxml2 ---
+FetchContent_Declare(tinyxml2
+    GIT_REPOSITORY https://github.com/leethomason/tinyxml2.git
+    GIT_TAG master)
+FetchContent_MakeAvailable(tinyxml2)
 
 # --- Vulkan SDK
 find_package(Vulkan REQUIRED)
@@ -91,6 +97,7 @@ add_executable(frg
     src/frg_ssao.cpp
     src/ssao_render_system.cpp
     src/camera_animation_system.cpp
+    src/scene_loader.cpp
 )
 
 # --- Shader compilation (GLSL -> SPIR-V) ---
@@ -140,11 +147,12 @@ target_include_directories(frg PRIVATE
     external/stb-src
 )
 
-target_link_libraries(frg PRIVATE
+    target_link_libraries(frg PRIVATE
     Vulkan::Vulkan
     ${GLFW_LINK_TARGET}
     ${GLFW_WIN_SYS_LIBS}
     assimp
+    tinyxml2
 )
 
 if (APPLE)

@@ -18,6 +18,8 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "scene_loader.hpp"
+
 namespace frg {
 FirstApp::FirstApp() {
   loadGameObjects();
@@ -203,19 +205,6 @@ void FirstApp::run() {
 }
 
 void FirstApp::loadGameObjects() {
-  // Load viking_room model with texture - great for SSAO testing
-  auto g_obj = FrgGameObject::createGameObject();
-  g_obj.model = std::make_shared<FrgModel>(
-      frgDevice, "../resources/models/viking_room/viking_room.obj");
-
-  std::cout << "# of vertices: " << g_obj.model->vertex_count() << std::endl;
-
-  gameObjects.emplace_back(std::move(g_obj));
-
-  // Position and scale the viking room for good SSAO visibility
-  gameObjects[0].transform.scale = glm::vec3{1.0f, 1.0f, 1.0f};
-  gameObjects[0].transform.rotation.x =
-      -glm::half_pi<float>(); // Rotate to face up
-  gameObjects[0].transform.translation = glm::vec3{0.0f, 0.0f, 2.0f};
+  SceneLoader::load(frgDevice, "../resources/scenes/scene0.xml", gameObjects);
 }
 } // namespace frg
