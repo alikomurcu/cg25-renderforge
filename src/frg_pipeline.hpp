@@ -52,6 +52,7 @@ class FrgPipeline {
     void create_shader_storage_buffers();
     VkPipelineLayout getComputePipelineLayout() { return computePipelineLayout; }
     VkPipeline getComputePipeline() { return computePipeline; }
+    VkPipeline getGraphicsPipeline() { return graphicsPipeline; }
     std::vector<VkBuffer> &getShaderStorageBuffers() { return shader_storage_buffers; }
     std::vector<VkDeviceMemory> &getShaderStorageBuffersMemory() { return shader_storage_buffers_memory; }
 

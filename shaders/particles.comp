@@ -1,13 +1,15 @@
 #version 450
 
 struct Particle {
-	vec2 position;
-	vec2 velocity;
-    vec4 color;
+	vec4 position;
+	vec4 velocity;
+    ivec4 flags;
+    vec4 dir;
 };
 
 layout (binding = 0) uniform ParameterUBO {
     float deltaTime;
+    vec4 w_parent_position;
 } ubo;
 
 layout(std140, binding = 1) readonly buffer ParticleSSBOIn {
@@ -23,18 +25,16 @@ layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 void main() 
 {
     uint index = gl_GlobalInvocationID.x;  
-
     Particle particleIn = particlesIn[index];
+    //If the particle dies we reset its values and start it again
+    if(particleIn.flags.x == 0){
+        particleIn.flags.x = 3000;
+        particleIn.position = ubo.w_parent_position;
+    }
 
-    particlesOut[index].position = particleIn.position + particleIn.velocity.xy * ubo.deltaTime;
+    particlesOut[index].position = particleIn.position + particleIn.dir * particleIn.velocity.x * ubo.deltaTime;
     particlesOut[index].velocity = particleIn.velocity;
-
-    // Flip movement at window border
-    if ((particlesOut[index].position.x <= -1.0) || (particlesOut[index].position.x >= 1.0)) {
-        particlesOut[index].velocity.x = -particlesOut[index].velocity.x;
-    }
-    if ((particlesOut[index].position.y <= -1.0) || (particlesOut[index].position.y >= 1.0)) {
-        particlesOut[index].velocity.y = -particlesOut[index].velocity.y;
-    }
-
+    particlesOut[index].dir = particleIn.dir;
+    particleIn.flags.x -= 1;
+    particlesOut[index].flags = particleIn.flags; 
 }

@@ -71,13 +71,27 @@ void FirstApp::run() {
             frgRenderer.beginSwapChainRenderPass(commandBuffer);
             simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects, camera, frameTime);
             simpleRenderSystem.bindComputeGraphicsPipeline(commandBuffer);
+            UniformBufferObject ubo{};
+            ubo.deltaTime = frameTime;
+            SimplePushConstantData push{};
+            push.transform = camera.getProjectionMatrix() * camera.getViewMatrix();
+            vkCmdPushConstants(
+                commandBuffer,
+                simpleRenderSystem.getComputeGraphicsPipelineLayout(),
+                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                0,
+                sizeof(SimplePushConstantData),
+                &push
+            );
+
+            ubo.w_parent_pos = frgParticleDispenser.get_w_position();
             frgRenderer.renderComputePipeline(
                 computeCommandBuffers,
                 frgDescriptor,
-                simpleRenderSystem.getComputeGraphicsPipelineLayout(),
-                simpleRenderSystem.getComputeGraphicsPipeline(),
+                simpleRenderSystem.getComputePipelineLayout(),
+                simpleRenderSystem.getComputePipeline(),
                 frgParticleDispenser.particle_count(),
-                frameTime,
+                ubo,
                 simpleRenderSystem.getUbosMapped()
             );
             frgRenderer.delegateComputeBindAndDraw(

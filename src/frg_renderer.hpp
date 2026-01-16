@@ -43,7 +43,7 @@ class FrgRenderer {
     void endSwapChainRenderPass(VkCommandBuffer commandBuffer);
     void renderComputePipeline(
         std::vector<VkCommandBuffer> &buffers, FrgDescriptor &desc, VkPipelineLayout pipe_layout, VkPipeline pipeline,
-        size_t particle_count, float dt, std::vector<void *> &ubos_mapped
+        size_t particle_count, UniformBufferObject &ubo, std::vector<void *> &ubos_mapped
     );
 
     // Delegate to swapchain

@@ -27,8 +27,9 @@ class SimpleRenderSystem {
 
     // Lighting interface
     LightManager &getLightManager() { return light_manager; }
-    VkPipelineLayout getComputeGraphicsPipelineLayout() { return frgComputePipeline->getComputePipelineLayout(); }
-    VkPipeline getComputeGraphicsPipeline() { return frgComputePipeline->getComputePipeline(); }
+    VkPipelineLayout getComputePipelineLayout() { return frgComputePipeline->getComputePipelineLayout(); }
+    VkPipeline getComputePipeline() { return frgComputePipeline->getComputePipeline(); }
+    VkPipelineLayout getComputeGraphicsPipelineLayout() { return computeGraphicsPipelineLayout; };
     std::vector<void *> &getUbosMapped() { return ubos_mapped; }
     void set_up_compute_desc_sets(size_t ssbo_size);
     void setup_ssbos(FrgParticleDispenser &dispenser);
