@@ -9,7 +9,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 2
-map_Kd lambert17_baseColor.png
+map_Kd textures/lambert17_baseColor.png
 
 newmtl lambert19
 Ns 159.999985
@@ -19,7 +19,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 2
-map_Kd lambert19_baseColor.png
+map_Kd textures/lambert19_baseColor.png
 
 newmtl lambert20
 Ns 0.000000
@@ -29,4 +29,4 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 2
-map_Kd lambert20_baseColor.png
+map_Kd textures/lambert20_baseColor.png

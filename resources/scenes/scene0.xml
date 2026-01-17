@@ -14,7 +14,7 @@
         </Transform>
     </GameObject>
 
-    <GameObject model="../resources/models/psx_garage/scene.gltf">
+    <GameObject model="../resources/models/new-garage/garage.obj">
         <Transform>
             <Translation x="0.0" y="-1.65" z="-2.0" />
             <Rotation x="0.0" y="1.57" z="0.0" />
