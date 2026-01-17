@@ -18,31 +18,31 @@
 
 namespace frg {
 class FirstApp {
-public:
-  static constexpr int WIDTH = 800;
-  static constexpr int HEIGHT = 600;
+  public:
+    static constexpr int WIDTH = 800;
+    static constexpr int HEIGHT = 600;
 
-  FirstApp();
-  ~FirstApp();
+    FirstApp();
+    ~FirstApp();
 
-  FirstApp(const FirstApp &) = delete;
-  FirstApp &operator=(const FirstApp &) = delete;
+    FirstApp(const FirstApp &) = delete;
+    FirstApp &operator=(const FirstApp &) = delete;
 
-  void run();
+    void run();
 
-private:
-  void loadGameObjects();
+  private:
+    void loadGameObjects();
 
-  FrgWindow frgWindow{WIDTH, HEIGHT, "RenderForge"};
-  FrgDevice frgDevice{frgWindow};
-  FrgDescriptor frgDescriptor{frgDevice};
-  FrgRenderer frgRenderer{frgWindow, frgDevice};
+    FrgWindow frgWindow{WIDTH, HEIGHT, "RenderForge"};
+    FrgDevice frgDevice{frgWindow};
+    FrgDescriptor frgDescriptor{frgDevice};
+    FrgRenderer frgRenderer{frgWindow, frgDevice};
 
-  std::vector<VkDescriptorImageInfo> get_descriptors_of_game_objects();
-  std::vector<FrgGameObject> gameObjects;
-  FrgGameObject viewerObject{FrgGameObject::createGameObject()};
-  LightManager lightManager;
-  SceneSettings sceneSettings;
-  uint32_t globalTextureIndex{0};
+    std::vector<VkDescriptorImageInfo> get_descriptors_of_game_objects();
+    std::vector<FrgGameObject> gameObjects;
+    FrgGameObject viewerObject{FrgGameObject::createGameObject()};
+    LightManager lightManager;
+    SceneSettings sceneSettings;
+    uint32_t globalTextureIndex{0};
 };
 } // namespace frg
