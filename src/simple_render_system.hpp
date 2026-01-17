@@ -13,30 +13,31 @@
 
 namespace frg {
 class SimpleRenderSystem {
-public:
-  SimpleRenderSystem(FrgDevice &device, VkRenderPass renderPass,
-                     FrgDescriptor &descriptor, LightManager &lightManager);
-  ~SimpleRenderSystem();
+  public:
+    SimpleRenderSystem(FrgDevice &device, VkRenderPass renderPass, FrgDescriptor &descriptor,
+                       LightManager &lightManager);
+    ~SimpleRenderSystem();
 
-  SimpleRenderSystem(const SimpleRenderSystem &) = delete;
-  SimpleRenderSystem &operator=(const SimpleRenderSystem &) = delete;
-  void renderGameObjects(VkCommandBuffer commandBuffer,
-                         std::vector<FrgGameObject> &gameObjects,
-                         const FrgCamera &camera, float frameTime,
-                         VkExtent2D screenSize, int debugMode = 0);
+    SimpleRenderSystem(const SimpleRenderSystem &) = delete;
+    SimpleRenderSystem &operator=(const SimpleRenderSystem &) = delete;
+    void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<FrgGameObject> &gameObjects,
+                           const FrgCamera &camera, float frameTime, VkExtent2D screenSize,
+                           int debugMode = 0);
 
-  // Lighting interface
-  LightManager &getLightManager() { return lightManager; }
+    // Lighting interface
+    LightManager &getLightManager() {
+        return lightManager;
+    }
 
-private:
-  void createPipelineLayout();
-  void createPipeline(VkRenderPass renderPass);
+  private:
+    void createPipelineLayout();
+    void createPipeline(VkRenderPass renderPass);
 
-  FrgDevice &frgDevice;
-  FrgDescriptor &frgDescriptor;
-  LightManager &lightManager;
+    FrgDevice &frgDevice;
+    FrgDescriptor &frgDescriptor;
+    LightManager &lightManager;
 
-  std::unique_ptr<FrgPipeline> frgPipeline;
-  VkPipelineLayout pipelineLayout;
+    std::unique_ptr<FrgPipeline> frgPipeline;
+    VkPipelineLayout pipelineLayout;
 };
 } // namespace frg

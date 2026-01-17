@@ -12,54 +12,56 @@
 
 namespace frg {
 class FrgRenderer {
-public:
-  FrgRenderer(FrgWindow &window, FrgDevice &device);
-  ~FrgRenderer();
+  public:
+    FrgRenderer(FrgWindow &window, FrgDevice &device);
+    ~FrgRenderer();
 
-  FrgRenderer(const FrgRenderer &) = delete;
-  FrgRenderer &operator=(const FrgRenderer &) = delete;
+    FrgRenderer(const FrgRenderer &) = delete;
+    FrgRenderer &operator=(const FrgRenderer &) = delete;
 
-  VkRenderPass getSwapChainRenderPass() const {
-    return frgSwapChain->getRenderPass();
-  }
+    VkRenderPass getSwapChainRenderPass() const {
+        return frgSwapChain->getRenderPass();
+    }
 
-  float getAspectRatio() const { return frgSwapChain->extentAspectRatio(); }
+    float getAspectRatio() const {
+        return frgSwapChain->extentAspectRatio();
+    }
 
-  VkExtent2D getSwapChainExtent() const {
-    return frgSwapChain->getSwapChainExtent();
-  }
+    VkExtent2D getSwapChainExtent() const {
+        return frgSwapChain->getSwapChainExtent();
+    }
 
-  bool isFrameInProgress() const { return isFrameStarted; }
+    bool isFrameInProgress() const {
+        return isFrameStarted;
+    }
 
-  VkCommandBuffer getCurrentCommandBuffer() const {
-    assert(isFrameStarted &&
-           "Cannot get command buffer when frame not in progress");
-    return commandBuffers[currentFrameIndex];
-  }
+    VkCommandBuffer getCurrentCommandBuffer() const {
+        assert(isFrameStarted && "Cannot get command buffer when frame not in progress");
+        return commandBuffers[currentFrameIndex];
+    }
 
-  uint32_t getCurrentFrameIndex() const {
-    assert(isFrameStarted &&
-           "Cannot get frame index when frame not in progress");
-    return currentFrameIndex;
-  }
+    uint32_t getCurrentFrameIndex() const {
+        assert(isFrameStarted && "Cannot get frame index when frame not in progress");
+        return currentFrameIndex;
+    }
 
-  VkCommandBuffer beginFrame();
-  void endFrame();
-  void beginSwapChainRenderPass(VkCommandBuffer commandBuffer);
-  void endSwapChainRenderPass(VkCommandBuffer commandBuffer);
+    VkCommandBuffer beginFrame();
+    void endFrame();
+    void beginSwapChainRenderPass(VkCommandBuffer commandBuffer);
+    void endSwapChainRenderPass(VkCommandBuffer commandBuffer);
 
-private:
-  void createCommandBuffers();
-  void freeCommandBuffers();
-  void recreateSwapChain();
+  private:
+    void createCommandBuffers();
+    void freeCommandBuffers();
+    void recreateSwapChain();
 
-  FrgWindow &frgWindow;
-  FrgDevice &frgDevice;
-  std::unique_ptr<FrgSwapChain> frgSwapChain;
-  std::vector<VkCommandBuffer> commandBuffers;
+    FrgWindow &frgWindow;
+    FrgDevice &frgDevice;
+    std::unique_ptr<FrgSwapChain> frgSwapChain;
+    std::vector<VkCommandBuffer> commandBuffers;
 
-  uint32_t currentImageIndex;
-  int currentFrameIndex{0};
-  bool isFrameStarted{false};
+    uint32_t currentImageIndex;
+    int currentFrameIndex{0};
+    bool isFrameStarted{false};
 };
 } // namespace frg
