@@ -63,7 +63,7 @@ void FirstApp::run() {
         camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
         // camera.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1);
-        camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
+        camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
 
         if (auto commandBuffer = frgRenderer.beginFrame()) {
             // make the render passes here, for example: shadow pass, post
@@ -74,7 +74,9 @@ void FirstApp::run() {
             UniformBufferObject ubo{};
             ubo.deltaTime = frameTime;
             SimplePushConstantData push{};
-            push.transform = camera.getProjectionMatrix() * camera.getViewMatrix();
+            auto projView = camera.getProjectionMatrix() * camera.getViewMatrix();
+            auto modelMat = frgParticleDispenser.transform.mat4();
+            push.transform = projView * modelMat;
             vkCmdPushConstants(
                 commandBuffer,
                 simpleRenderSystem.getComputeGraphicsPipelineLayout(),
@@ -84,7 +86,7 @@ void FirstApp::run() {
                 &push
             );
 
-            ubo.w_parent_pos = frgParticleDispenser.get_w_position();
+            ubo.w_parent_pos = {frgParticleDispenser.transform.translation, .6f};
             frgRenderer.renderComputePipeline(
                 computeCommandBuffers,
                 frgDescriptor,

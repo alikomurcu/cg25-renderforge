@@ -4,18 +4,43 @@ namespace frg {
 FrgParticleDispenser::FrgParticleDispenser(
     FrgDevice &device, uint32_t particle_count, int h, int w, glm::vec4 position, int angle_of_domain, int angle_var
 )
-    : m_device{device}, m_particle_count{particle_count}, w_position{position} {
+    : m_device{device}, m_particle_count{particle_count} {
 
+    transform.translation = glm::vec3(position.x, position.y, position.z);
     m_particles.resize(m_particle_count);
     m_rand_eng = std::default_random_engine((unsigned)time(nullptr));
     m_dist01 = std::uniform_real_distribution<float>(0.0f, 1.0f);
     m_dist11 = std::uniform_real_distribution<float>(-1.0f, 1.0f);
+
     for (auto &particle : m_particles) {
-        particle.pos = generate_point_in_sphere(position);
-        particle.vel = {m_dist01(m_rand_eng), 0, 0, 0};
+        // alfa -> z
+        float alfa = (angle_of_domain / 2.0f) * m_dist01(m_rand_eng);
+        // beta -> y
+        float beta = (angle_of_domain / 2.0f) * m_dist01(m_rand_eng);
+        float gamma = (angle_of_domain / 2.0f) * m_dist01(m_rand_eng);
+        // Source:
+        // https://en.wikipedia.org/wiki/Rotation_matrix
+        glm::mat3 rot_m = {
+            glm::vec3(cosf(alfa) * cosf(beta), -sinf(alfa), cosf(alfa) * sinf(beta)),
+            glm::vec3(sinf(alfa) * cosf(beta), cosf(alfa), sinf(alfa) * sinf(beta)),
+            glm::vec3(-sinf(beta), 0, cosf(beta))
+        };
+
+        // glm::mat3 rot_m = {
+        //     glm::vec3(cosf(alfa), -sinf(alfa) * cosf(gamma), sinf(alfa) * sinf(gamma)),
+        //     glm::vec3(sinf(alfa), cosf(alfa) * cosf(gamma), -cosf(alfa) * sinf(gamma)),
+        //     glm::vec3(0, sinf(gamma), cosf(gamma))
+        // };
+
+        glm::vec3 up_vector = {0.0, -1.0, 0.0};
+
+        particle.pos = position; // generate_point_in_sphere(position); // generate_point_in_sphere(position);
+        particle.vel = {m_dist01(m_rand_eng) * 0.1f, 0, 0, 0};
         // y down in vulkan
-        particle.dir = {m_dist11(m_rand_eng), -1 * m_dist01(m_rand_eng), m_dist11(m_rand_eng), 0};
-        particle.flags = {300, 0, 0, 0};
+        particle.dir = {up_vector, 0}; //{glm::vec3(rot_m * up_vector), 0};
+        int default_ttl = 30000;
+        int ttl = std::max(300, static_cast<int>(m_dist01(m_rand_eng) * default_ttl));
+        particle.flags = {ttl, 0, 0, ttl};
     }
 
     m_staging_buff_size = sizeof(Particle) * m_particle_count;
@@ -31,7 +56,7 @@ FrgParticleDispenser::FrgParticleDispenser(
     vkMapMemory(m_device.device(), m_staging_buff_mem, 0, m_staging_buff_size, 0, &data);
     memcpy(data, m_particles.data(), static_cast<size_t>(m_staging_buff_size));
     vkUnmapMemory(m_device.device(), m_staging_buff_mem);
-}
+} // namespace frg
 FrgParticleDispenser::~FrgParticleDispenser() {
     vkDestroyBuffer(m_device.device(), m_staging_buff, nullptr);
     vkFreeMemory(m_device.device(), m_staging_buff_mem, nullptr);
@@ -54,9 +79,10 @@ void FrgParticleDispenser::cpy_host2dev(std::vector<VkBuffer> &buffers, std::vec
 glm::vec4 FrgParticleDispenser::generate_point_in_sphere(glm::vec4 w_sphere_origin) {
     glm::vec4 pos{};
     do {
-        pos = glm::vec4(m_dist11(m_rand_eng), m_dist11(m_rand_eng), m_dist11(m_rand_eng), 0);
+        pos = glm::vec4(m_dist11(m_rand_eng), -1 * m_dist11(m_rand_eng), m_dist11(m_rand_eng), 0);
     } while (glm::length(pos) > 1);
 
+    pos /= 1.f;
     return pos + w_sphere_origin;
 }
 VkVertexInputBindingDescription Particle::getBindingDescription() {
@@ -67,12 +93,17 @@ VkVertexInputBindingDescription Particle::getBindingDescription() {
 
     return bindingDescription;
 }
-std::array<VkVertexInputAttributeDescription, 1> Particle::getAttributeDescriptions() {
-    std::array<VkVertexInputAttributeDescription, 1> attr_desc{};
+std::array<VkVertexInputAttributeDescription, 2> Particle::getAttributeDescriptions() {
+    std::array<VkVertexInputAttributeDescription, 2> attr_desc{};
     attr_desc[0].binding = 0;
     attr_desc[0].location = 0;
     attr_desc[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
     attr_desc[0].offset = offsetof(Particle, pos);
+
+    attr_desc[1].binding = 0;
+    attr_desc[1].location = 1;
+    attr_desc[1].format = VK_FORMAT_R32G32B32A32_SINT;
+    attr_desc[1].offset = offsetof(Particle, flags);
 
     return attr_desc;
 }

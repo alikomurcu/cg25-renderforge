@@ -28,8 +28,10 @@ void main()
     Particle particleIn = particlesIn[index];
     //If the particle dies we reset its values and start it again
     if(particleIn.flags.x == 0){
-        particleIn.flags.x = 3000;
+        particleIn.flags.x = particleIn.flags.w;
+        particleIn.flags.y = 1;
         particleIn.position = ubo.w_parent_position;
+        particleIn.position.w = 1.0;
     }
 
     particlesOut[index].position = particleIn.position + particleIn.dir * particleIn.velocity.x * ubo.deltaTime;

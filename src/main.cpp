@@ -5,6 +5,7 @@
 #include <iostream>
 #include <stdexcept>
 
+// TODO: make particles go only upwards
 int main() {
     try {
         frg::FirstApp app{};

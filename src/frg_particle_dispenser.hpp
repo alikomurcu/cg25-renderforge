@@ -9,6 +9,7 @@
 #include <time.h>
 
 #include "frg_device.hpp"
+#include "frg_game_object.hpp"
 
 namespace frg {
 
@@ -22,7 +23,7 @@ struct UniformBufferObject {
 //  flags.x -> ttl (Time to Live) of the given particle, if its 0 it is considered to be dead
 //  flags.y -> DEGREE | variance of the angle that the particle could achieve in relation to the dir vector
 //  flags.z -> DEGREE | angle of domain from which dir vec can take values
-//  flags.w -> unused
+//  flags.w -> default ttl for the particle
 //
 // 64 bytes
 struct Particle {
@@ -33,7 +34,7 @@ struct Particle {
     glm::vec4 dir;    // 16 byte
 
     static VkVertexInputBindingDescription getBindingDescription();
-    static std::array<VkVertexInputAttributeDescription, 1> getAttributeDescriptions();
+    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();
 };
 class FrgParticleDispenser {
   public:
@@ -47,7 +48,7 @@ class FrgParticleDispenser {
     const VkBuffer *staging_buffer() { return &m_staging_buff; }
     const VkDeviceSize *staging_buffer_size() { return &m_staging_buff_size; }
     void cpy_host2dev(std::vector<VkBuffer> &buffers, std::vector<VkDeviceMemory> &buffers_memory);
-    glm::vec4 get_w_position() { return w_position; }
+    TransformComponent transform{};
 
   private:
     std::default_random_engine m_rand_eng;
@@ -59,7 +60,6 @@ class FrgParticleDispenser {
     VkBuffer m_staging_buff;
     VkDeviceMemory m_staging_buff_mem;
     VkDeviceSize m_staging_buff_size;
-    glm::vec4 w_position;
 
     std::vector<Particle> m_particles;
 };
