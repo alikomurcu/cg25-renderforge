@@ -35,9 +35,5 @@ void main() {
     gl_Position = push.transform * inPosition; 
     int percentage =  ((max_ttl-ttl) * 100) / max_ttl;
     int index = max(0, int(round(percentage * float(colorsSize) / 100.0)) - 1);
-    if(particleFlags.y == 1){
-        fragColor = vec3(1.0, 0.0, 0.0);
-    }else {
-        fragColor = colors[index];
-    }
+    fragColor = colors[index];
 }

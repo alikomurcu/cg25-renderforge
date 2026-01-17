@@ -33,7 +33,7 @@ FrgParticleDispenser::FrgParticleDispenser(
 
         glm::vec3 up_vector = {0.0, -1.0, 0.0};
 
-        particle.pos = position; // generate_point_in_sphere(position); // generate_point_in_sphere(position);
+        particle.pos = generate_point_in_sphere(position); // generate_point_in_sphere(position);
         particle.vel = {m_dist01(m_rand_eng) * 0.1f, 0, 0, 0};
         // y down in vulkan
         particle.dir = {glm::vec3(rot_m_z * rot_m_x * up_vector), 0};
@@ -81,7 +81,7 @@ glm::vec4 FrgParticleDispenser::generate_point_in_sphere(glm::vec4 w_sphere_orig
         pos = glm::vec4(m_dist11(m_rand_eng), -1 * m_dist11(m_rand_eng), m_dist11(m_rand_eng), 0);
     } while (glm::length(pos) > 1);
 
-    pos /= 1.f;
+    pos /= 10.f;
     return pos + w_sphere_origin;
 }
 VkVertexInputBindingDescription Particle::getBindingDescription() {
