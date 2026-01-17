@@ -11,33 +11,32 @@ FrgParticleDispenser::FrgParticleDispenser(
     m_rand_eng = std::default_random_engine((unsigned)time(nullptr));
     m_dist01 = std::uniform_real_distribution<float>(0.0f, 1.0f);
     m_dist11 = std::uniform_real_distribution<float>(-1.0f, 1.0f);
-
+    angle_of_domain = 1.57;
     for (auto &particle : m_particles) {
         // alfa -> z
-        float alfa = (angle_of_domain / 2.0f) * m_dist01(m_rand_eng);
-        // beta -> y
-        float beta = (angle_of_domain / 2.0f) * m_dist01(m_rand_eng);
-        float gamma = (angle_of_domain / 2.0f) * m_dist01(m_rand_eng);
+        float alfa = (angle_of_domain / 2.0f) * m_dist11(m_rand_eng);
+        // gamma -> x
+        float gamma = (angle_of_domain / 2.0f) * m_dist11(m_rand_eng);
         // Source:
         // https://en.wikipedia.org/wiki/Rotation_matrix
-        glm::mat3 rot_m = {
-            glm::vec3(cosf(alfa) * cosf(beta), -sinf(alfa), cosf(alfa) * sinf(beta)),
-            glm::vec3(sinf(alfa) * cosf(beta), cosf(alfa), sinf(alfa) * sinf(beta)),
-            glm::vec3(-sinf(beta), 0, cosf(beta))
+        glm::mat3 rot_m_x = {
+            {1,           0,            0},
+            {0, cosf(gamma), -sinf(gamma)},
+            {0, sinf(gamma),  cosf(gamma)}
         };
 
-        // glm::mat3 rot_m = {
-        //     glm::vec3(cosf(alfa), -sinf(alfa) * cosf(gamma), sinf(alfa) * sinf(gamma)),
-        //     glm::vec3(sinf(alfa), cosf(alfa) * cosf(gamma), -cosf(alfa) * sinf(gamma)),
-        //     glm::vec3(0, sinf(gamma), cosf(gamma))
-        // };
+        glm::mat3 rot_m_z = {
+            {cosf(alfa), -sinf(alfa), 0},
+            {sinf(alfa),  cosf(alfa), 0},
+            {         0,           0, 1}
+        };
 
         glm::vec3 up_vector = {0.0, -1.0, 0.0};
 
         particle.pos = position; // generate_point_in_sphere(position); // generate_point_in_sphere(position);
         particle.vel = {m_dist01(m_rand_eng) * 0.1f, 0, 0, 0};
         // y down in vulkan
-        particle.dir = {up_vector, 0}; //{glm::vec3(rot_m * up_vector), 0};
+        particle.dir = {glm::vec3(rot_m_z * rot_m_x * up_vector), 0};
         int default_ttl = 30000;
         int ttl = std::max(300, static_cast<int>(m_dist01(m_rand_eng) * default_ttl));
         particle.flags = {ttl, 0, 0, ttl};
