@@ -1,0 +1,145 @@
+#include "frg_descriptor.hpp"
+
+namespace frg {
+FrgDescriptor::FrgDescriptor(FrgDevice &device) : frg_device{device} {
+  create_descriptor_set_layout_binding();
+  create_descriptor_pool();
+  create_descriptor_sets();
+}
+FrgDescriptor::~FrgDescriptor() {
+  vkDestroyDescriptorPool(frg_device.device(), descriptor_pool, nullptr);
+  vkDestroyDescriptorSetLayout(frg_device.device(), descriptor_set_layout,
+                               nullptr);
+}
+
+void FrgDescriptor::create_descriptor_set_layout_binding() {
+  // Binding 0: Sampler for textures
+  VkDescriptorSetLayoutBinding sampler_layout_binding{};
+  sampler_layout_binding.binding = 0;
+  sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+  sampler_layout_binding.descriptorCount = 1;
+  sampler_layout_binding.pImmutableSamplers = nullptr;
+  sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+  // Binding 1: Texture array
+  VkDescriptorSetLayoutBinding image_array_binding{};
+  image_array_binding.binding = 1;
+  image_array_binding.descriptorCount = texture_descriptor_size;
+  image_array_binding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+  image_array_binding.pImmutableSamplers = nullptr;
+  image_array_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+  // Binding 2: SSAO texture (combined image sampler)
+  VkDescriptorSetLayoutBinding ssao_binding{};
+  ssao_binding.binding = 2;
+  ssao_binding.descriptorCount = 1;
+  ssao_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  ssao_binding.pImmutableSamplers = nullptr;
+  ssao_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+  std::array<VkDescriptorSetLayoutBinding, 3> bindings = {
+      sampler_layout_binding, image_array_binding, ssao_binding};
+
+  VkDescriptorSetLayoutCreateInfo layout_info{};
+  layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+  layout_info.bindingCount = static_cast<uint32_t>(bindings.size());
+  layout_info.pBindings = bindings.data();
+
+  VkDescriptorBindingFlags binding_flags[] = {
+      0, VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
+      VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT};
+  VkDescriptorSetLayoutBindingFlagsCreateInfo layout_flags_info{};
+  layout_flags_info.sType =
+      VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
+  layout_flags_info.bindingCount = 3;
+  layout_flags_info.pBindingFlags = binding_flags;
+  layout_flags_info.pNext = nullptr;
+  layout_info.pNext = reinterpret_cast<void *>(&layout_flags_info);
+
+  if (vkCreateDescriptorSetLayout(frg_device.device(), &layout_info, nullptr,
+                                  &descriptor_set_layout) != VK_SUCCESS) {
+    throw std::runtime_error("failed to create descriptor set layout!");
+  }
+}
+
+void FrgDescriptor::create_descriptor_pool() {
+  std::array<VkDescriptorPoolSize, 3> pool_sizes;
+  pool_sizes[0] = {};
+  pool_sizes[0].type = VK_DESCRIPTOR_TYPE_SAMPLER;
+  pool_sizes[0].descriptorCount = 1;
+  pool_sizes[1].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+  pool_sizes[1].descriptorCount = texture_descriptor_size;
+  pool_sizes[2].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  pool_sizes[2].descriptorCount = 1; // SSAO texture
+
+  VkDescriptorPoolCreateInfo pool_info{};
+  pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+  pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
+  pool_info.pPoolSizes = pool_sizes.data();
+  pool_info.maxSets = texture_descriptor_size + 1;
+
+  if (vkCreateDescriptorPool(frg_device.device(), &pool_info, nullptr,
+                             &descriptor_pool) != VK_SUCCESS) {
+    throw std::runtime_error("failed to create descriptor pool!");
+  }
+}
+
+void FrgDescriptor::create_descriptor_sets() {
+  VkDescriptorSetAllocateInfo alloc_info{};
+  alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+  alloc_info.descriptorPool = descriptor_pool;
+  alloc_info.descriptorSetCount = 1;
+  alloc_info.pSetLayouts = &descriptor_set_layout;
+
+  if (vkAllocateDescriptorSets(frg_device.device(), &alloc_info,
+                               &descriptor_set) != VK_SUCCESS) {
+    throw std::runtime_error("failed to allocate descriptor set!");
+  }
+}
+
+void FrgDescriptor::write_descriptor_sets(
+    const std::vector<VkDescriptorImageInfo> &image_infos) {
+  VkDescriptorImageInfo sampler_info{};
+  sampler_info.sampler = frg_device.textureSampler();
+
+  std::array<VkWriteDescriptorSet, 2> set_writes{};
+  set_writes[0] = {};
+  set_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  set_writes[0].dstSet = descriptor_set;
+  set_writes[0].dstBinding = 0;
+  set_writes[0].dstArrayElement = 0;
+  set_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+  set_writes[0].descriptorCount = 1;
+  set_writes[0].pBufferInfo = 0;
+  set_writes[0].pImageInfo = &sampler_info;
+
+  set_writes[1] = {};
+  set_writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  set_writes[1].dstSet = descriptor_set;
+  set_writes[1].dstBinding = 1;
+  set_writes[1].dstArrayElement = 0;
+  set_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+  set_writes[1].descriptorCount = static_cast<uint32_t>(image_infos.size());
+  set_writes[1].pBufferInfo = 0;
+  set_writes[1].pImageInfo = image_infos.data();
+
+  vkUpdateDescriptorSets(frg_device.device(),
+                         static_cast<uint32_t>(set_writes.size()),
+                         set_writes.data(), 0, nullptr);
+}
+
+void FrgDescriptor::setSSAOTexture(VkDescriptorImageInfo ssaoInfo) {
+  VkWriteDescriptorSet write{};
+  write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  write.dstSet = descriptor_set;
+  write.dstBinding = 2;
+  write.dstArrayElement = 0;
+  write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  write.descriptorCount = 1;
+  write.pImageInfo = &ssaoInfo;
+
+  vkUpdateDescriptorSets(frg_device.device(), 1, &write, 0, nullptr);
+  ssaoEnabled = true;
+}
+
+} // namespace frg
