@@ -3,9 +3,9 @@
 # No other meaning or use of this file is supported.
 
 method=git
-command=C:/Program Files/CMake/bin/cmake.exe;-DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE;-P;C:/Users/bigaron/programming/egyetem/computer_graphics/cg25-renderforge/external/assimp-subbuild/assimp-populate-prefix/tmp/assimp-populate-gitclone.cmake
-source_dir=C:/Users/bigaron/programming/egyetem/computer_graphics/cg25-renderforge/external/assimp-src
-work_dir=C:/Users/bigaron/programming/egyetem/computer_graphics/cg25-renderforge/external
+command=C:/Program Files/CMake/bin/cmake.exe;-DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE;-P;C:/Users/bigaron/programming/egyetem/computer_graphics/final/cg25-renderforge/external/assimp-subbuild/assimp-populate-prefix/tmp/assimp-populate-gitclone.cmake
+source_dir=C:/Users/bigaron/programming/egyetem/computer_graphics/final/cg25-renderforge/external/assimp-src
+work_dir=C:/Users/bigaron/programming/egyetem/computer_graphics/final/cg25-renderforge/external
 repository=https://github.com/assimp/assimp.git
 remote=origin
 init_submodules=TRUE

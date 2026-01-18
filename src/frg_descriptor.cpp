@@ -91,7 +91,7 @@ void FrgDescriptor::create_comp_descriptor_set_layout_binding() {
 }
 
 void FrgDescriptor::create_descriptor_pool() {
-    std::array<VkDescriptorPoolSize, 3> pool_sizes;
+    std::array<VkDescriptorPoolSize, 5> pool_sizes;
     pool_sizes[0] = {};
     pool_sizes[0].type = VK_DESCRIPTOR_TYPE_SAMPLER;
     pool_sizes[0].descriptorCount = 1;
@@ -99,6 +99,10 @@ void FrgDescriptor::create_descriptor_pool() {
     pool_sizes[1].descriptorCount = texture_descriptor_size;
     pool_sizes[2].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     pool_sizes[2].descriptorCount = 1; // SSAO texture
+    pool_sizes[3].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    pool_sizes[3].descriptorCount = static_cast<uint32_t>(FrgSwapChain::MAX_FRAMES_IN_FLIGHT);
+    pool_sizes[4].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    pool_sizes[4].descriptorCount = static_cast<uint32_t>(FrgSwapChain::MAX_FRAMES_IN_FLIGHT) * 2;
 
     VkDescriptorPoolCreateInfo pool_info{};
     pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;

@@ -18,9 +18,10 @@ struct Vertex {
     glm::vec3 position;
     glm::vec3 normal;
     glm::vec2 tex_coord;
+    glm::vec3 tangent{};
 
     static std::vector<VkVertexInputBindingDescription> get_binding_descriptions();
-    static std::array<VkVertexInputAttributeDescription, 3> get_attribute_descriptions();
+    static std::array<VkVertexInputAttributeDescription, 4> get_attribute_descriptions();
 };
 
 class LoadedTextures {

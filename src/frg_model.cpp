@@ -85,6 +85,13 @@ std::unique_ptr<FrgMesh> FrgModel::process_mesh(aiMesh *mesh, const aiScene *sce
             vector.z = mesh->mNormals[i].z;
         }
         vertex.normal = vector;
+        if(mesh->mNormals != nullptr){
+            vector.x = mesh->mTangents[i].x;
+            vector.y = mesh->mTangents[i].y;
+            vector.z = mesh->mTangents[i].z;
+            vertex.tangent = vector;
+        }
+
 
         if (mesh->mTextureCoords[0]) {
             glm::vec2 vec;

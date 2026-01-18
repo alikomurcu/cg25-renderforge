@@ -1,6 +1,7 @@
 .vs
 x64/**
 render_forge/x64/**
+external/
 
 # CMake build directories and files
 build/

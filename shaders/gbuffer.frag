@@ -4,6 +4,7 @@
 layout(location = 0) in vec3 fragViewPos;
 layout(location = 1) in vec3 fragViewNormal;
 layout(location = 2) in vec2 fragTexCoord;
+layout(location = 3) in mat3 TBN;
 
 // Multiple Render Targets (MRT)
 layout(location = 0) out vec4 gPosition;  // View-space position
@@ -16,5 +17,7 @@ void main() {
     
     // Store view-space normal (normalized)
     // Pack into [0,1] range is not needed since we use RGBA16F
-    gNormal = vec4(normalize(fragViewNormal), 1.0);
+    gNormal = vec4(normalize(TBN * fragViewNormal), 1.0);
+    //gNormal = vec4(normalize( fragViewNormal), 1.0);
+
 }

@@ -7,6 +7,7 @@ layout(set = 0, binding = 2) uniform sampler2D ssaoTexture;
 layout(location = 0) in vec3 fragNormal;
 layout(location = 1) in vec2 frag_tex_coord;
 layout(location = 2) in vec3 fragWorldPos;
+layout(location = 3) in mat3 TBN;
 
 layout(location = 0) out vec4 outColor;
 
@@ -54,6 +55,7 @@ void main() {
   if(has_normal){
       vec3 normal_tex = texture(sampler2D(textures[push.texture_idx + 1], tex_sampler), frag_tex_coord).rgb;
       normal = normalize(normal_tex * 2.0 - 1.0);
+      normal = normalize(TBN * normal);
   }
   
   // ---------------------------------------------------------
@@ -81,7 +83,7 @@ void main() {
   }
   else if (push.debugMode == 2) {
     // Mode 2: Show normals as colors (remap from [-1,1] to [0,1])
-    vec3 normalColor = fragNormal * 0.5 + 0.5;
+    vec3 normalColor = normal * 0.5 + 0.5;
     outColor = vec4(normalColor, 1.0);
     return;
   }
@@ -104,7 +106,7 @@ void main() {
   // Calculate point light contribution
   vec3 pointLightContrib =
       calculatePointLight(push.pointLightPosition.xyz, push.pointLightColor.xyz,
-                          push.pointLightColor.w, fragNormal, fragWorldPos);
+                          push.pointLightColor.w, normal, fragWorldPos);
 
   // Combine ambient (modulated by SSAO) and point light
   vec3 ambient = vec3(AMBIENT_LIGHT) * ao;

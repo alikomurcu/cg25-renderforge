@@ -28,8 +28,8 @@ set_property(GLOBAL PROPERTY _CMAKE_FindGit_GIT_EXECUTABLE_VERSION
 include(ExternalProject)
 ExternalProject_Add(assimp-populate
                      "UPDATE_DISCONNECTED" "False" "GIT_REPOSITORY" "https://github.com/assimp/assimp.git" "EXTERNALPROJECT_INTERNAL_ARGUMENT_SEPARATOR" "GIT_TAG" "master"
-                    SOURCE_DIR          "C:/Users/bigaron/programming/egyetem/computer_graphics/cg25-renderforge/external/assimp-src"
-                    BINARY_DIR          "C:/Users/bigaron/programming/egyetem/computer_graphics/cg25-renderforge/external/assimp-build"
+                    SOURCE_DIR          "C:/Users/bigaron/programming/egyetem/computer_graphics/final/cg25-renderforge/external/assimp-src"
+                    BINARY_DIR          "C:/Users/bigaron/programming/egyetem/computer_graphics/final/cg25-renderforge/external/assimp-build"
                     CONFIGURE_COMMAND   ""
                     BUILD_COMMAND       ""
                     INSTALL_COMMAND     ""
