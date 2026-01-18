@@ -13,6 +13,13 @@ struct PipelineConfigInfo {
     PipelineConfigInfo(const PipelineConfigInfo &) = delete;
     PipelineConfigInfo &operator=(const PipelineConfigInfo &) = delete;
 
+    // Vertex input (optional - if empty, uses default Vertex class)
+    std::vector<VkVertexInputBindingDescription> bindingDescriptions{};
+    std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
+
+    // Multiple color blend attachments (for MRT)
+    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments{};
+
     VkPipelineViewportStateCreateInfo viewportInfo;
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
     VkPipelineRasterizationStateCreateInfo rasterizationInfo;

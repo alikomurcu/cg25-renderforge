@@ -14,6 +14,7 @@ FrgDescriptor::~FrgDescriptor() {
 }
 
 void FrgDescriptor::create_descriptor_set_layout_binding() {
+    // Binding 0: Sampler for textures
     VkDescriptorSetLayoutBinding sampler_layout_binding{};
     sampler_layout_binding.binding = 0;
     sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
@@ -21,6 +22,7 @@ void FrgDescriptor::create_descriptor_set_layout_binding() {
     sampler_layout_binding.pImmutableSamplers = nullptr;
     sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+    // Binding 1: Texture array
     VkDescriptorSetLayoutBinding image_array_binding{};
     image_array_binding.binding = 1;
     image_array_binding.descriptorCount = texture_descriptor_size;
@@ -28,17 +30,27 @@ void FrgDescriptor::create_descriptor_set_layout_binding() {
     image_array_binding.pImmutableSamplers = nullptr;
     image_array_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-    std::array<VkDescriptorSetLayoutBinding, 2> bindings = {sampler_layout_binding, image_array_binding};
+    // Binding 2: SSAO texture (combined image sampler)
+    VkDescriptorSetLayoutBinding ssao_binding{};
+    ssao_binding.binding = 2;
+    ssao_binding.descriptorCount = 1;
+    ssao_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    ssao_binding.pImmutableSamplers = nullptr;
+    ssao_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    std::array<VkDescriptorSetLayoutBinding, 3> bindings = {sampler_layout_binding,
+                                                            image_array_binding, ssao_binding};
 
     VkDescriptorSetLayoutCreateInfo layout_info{};
     layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     layout_info.bindingCount = static_cast<uint32_t>(bindings.size());
     layout_info.pBindings = bindings.data();
 
-    VkDescriptorBindingFlags binding_flags[] = {0, VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT};
+    VkDescriptorBindingFlags binding_flags[] = {0, VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
+                                                VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT};
     VkDescriptorSetLayoutBindingFlagsCreateInfo layout_flags_info{};
     layout_flags_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
-    layout_flags_info.bindingCount = 2;
+    layout_flags_info.bindingCount = 3;
     layout_flags_info.pBindingFlags = binding_flags;
     layout_flags_info.pNext = nullptr;
     layout_info.pNext = reinterpret_cast<void *>(&layout_flags_info);
@@ -79,16 +91,14 @@ void FrgDescriptor::create_comp_descriptor_set_layout_binding() {
 }
 
 void FrgDescriptor::create_descriptor_pool() {
-    std::array<VkDescriptorPoolSize, 4> pool_sizes;
+    std::array<VkDescriptorPoolSize, 3> pool_sizes;
     pool_sizes[0] = {};
     pool_sizes[0].type = VK_DESCRIPTOR_TYPE_SAMPLER;
     pool_sizes[0].descriptorCount = 1;
     pool_sizes[1].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
     pool_sizes[1].descriptorCount = texture_descriptor_size;
-    pool_sizes[2].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    pool_sizes[2].descriptorCount = static_cast<uint32_t>(FrgSwapChain::MAX_FRAMES_IN_FLIGHT);
-    pool_sizes[3].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    pool_sizes[3].descriptorCount = static_cast<uint32_t>(FrgSwapChain::MAX_FRAMES_IN_FLIGHT) * 2;
+    pool_sizes[2].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    pool_sizes[2].descriptorCount = 1; // SSAO texture
 
     VkDescriptorPoolCreateInfo pool_info{};
     pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -244,6 +254,20 @@ void FrgDescriptor::recordComputeCommandBuffer(
     if (vkEndCommandBuffer(command_buf) != VK_SUCCESS) {
         throw std::runtime_error("failed to record compute command buffer!");
     }
+}
+
+void FrgDescriptor::setSSAOTexture(VkDescriptorImageInfo ssaoInfo) {
+    VkWriteDescriptorSet write{};
+    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write.dstSet = descriptor_set;
+    write.dstBinding = 2;
+    write.dstArrayElement = 0;
+    write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    write.descriptorCount = 1;
+    write.pImageInfo = &ssaoInfo;
+
+    vkUpdateDescriptorSets(frg_device.device(), 1, &write, 0, nullptr);
+    ssaoEnabled = true;
 }
 
 } // namespace frg

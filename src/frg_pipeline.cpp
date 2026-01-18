@@ -136,12 +136,29 @@ void FrgPipeline::createGraphicsPipeline(
     shaderStages[1].pNext = nullptr;
     shaderStages[1].pSpecializationInfo = nullptr;
 
+    // Use custom vertex input if provided, otherwise use default Vertex class
+    std::vector<VkVertexInputBindingDescription> bindingDescriptions;
+    std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
+
+    if (configInfo.bindingDescriptions.empty() && configInfo.attributeDescriptions.empty()) {
+        // Use default Vertex class bindings
+        bindingDescriptions = Vertex::get_binding_descriptions();
+        auto attrDescs = Vertex::get_attribute_descriptions();
+        attributeDescriptions =
+            std::vector<VkVertexInputAttributeDescription>(attrDescs.begin(), attrDescs.end());
+    } else {
+        bindingDescriptions = configInfo.bindingDescriptions;
+        attributeDescriptions = configInfo.attributeDescriptions;
+    }
+
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(input_binding_desc.size());
-    vertexInputInfo.pVertexBindingDescriptions = input_binding_desc.data();
-    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attr_desc.size());
-    vertexInputInfo.pVertexAttributeDescriptions = attr_desc.data();
+    vertexInputInfo.vertexBindingDescriptionCount =
+        static_cast<uint32_t>(bindingDescriptions.size());
+    vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
+    vertexInputInfo.vertexAttributeDescriptionCount =
+        static_cast<uint32_t>(attributeDescriptions.size());
+    vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
     VkGraphicsPipelineCreateInfo pipelineInfo{};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;

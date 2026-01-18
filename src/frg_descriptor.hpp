@@ -29,6 +29,9 @@ class FrgDescriptor {
         std::vector<VkBuffer> &uni_buffers, size_t ubo_size, std::vector<VkBuffer> &shader_storage_buffers,
         size_t ssbo_size
     );
+  
+      // Set SSAO texture for the final lighting pass
+    void setSSAOTexture(VkDescriptorImageInfo ssaoInfo);
 
     void recordComputeCommandBuffer(
         VkCommandBuffer command_buf, VkPipelineLayout pipeline_layout, VkPipeline compute_pipeline, size_t dispatch,
@@ -40,8 +43,7 @@ class FrgDescriptor {
     void create_comp_descriptor_set_layout_binding();
     void create_descriptor_pool();
     void create_descriptor_sets();
-
-    const uint32_t DEFAULT_POOL_SIZE_INCR = 256;
+    const uint32_t DEFAULT_POOL_SIZE_INCR = 255; // 255 + 1 SSAO = 256 (device limit)
     uint32_t texture_descriptor_size = DEFAULT_POOL_SIZE_INCR;
     uint32_t texture_count = 0;
     FrgDevice &frg_device;
@@ -50,5 +52,8 @@ class FrgDescriptor {
     VkDescriptorPool descriptor_pool;
     VkDescriptorSet descriptor_set;
     std::vector<VkDescriptorSet> comp_descriptor_set;
+
+    // Track if SSAO has been set
+    bool ssaoEnabled = false;
 };
 } // namespace frg

@@ -26,6 +26,19 @@ void FrgModel::draw(VkCommandBuffer command_buffer, VkPipelineLayout pipeline_la
     }
 }
 
+void FrgModel::bind(VkCommandBuffer command_buffer) {
+    for (const auto &mesh : meshes) {
+        mesh->bind(command_buffer);
+    }
+}
+
+void FrgModel::draw(VkCommandBuffer command_buffer) {
+    for (const auto &mesh : meshes) {
+      mesh->bind(command_buffer);
+      mesh->draw(command_buffer);
+    }
+} 
+  
 void FrgModel::load_model(const std::string &path) {
     Assimp::Importer importer;
     const aiScene *scene = importer.ReadFile(

@@ -13,8 +13,9 @@
 
 namespace frg {
 
-SimpleRenderSystem::SimpleRenderSystem(FrgDevice &device, VkRenderPass renderPass, FrgDescriptor &descriptor)
-    : frgDevice{device}, frgDescriptor{descriptor} {
+SimpleRenderSystem::SimpleRenderSystem(FrgDevice &device, VkRenderPass renderPass,
+                                       FrgDescriptor &descriptor, LightManager &lightManagerPtr)
+    : frgDevice{device}, frgDescriptor{descriptor}, lightManager{lightManagerPtr} {
     createPipelineLayout();
     createPipeline(renderPass);
     createComputeGraphicsPipelineLayout();
@@ -143,9 +144,10 @@ void SimpleRenderSystem::createUniformBuffers() {
     }
 }
 
-void SimpleRenderSystem::renderGameObjects(
-    VkCommandBuffer commandBuffer, std::vector<FrgGameObject> &gameObjects, const FrgCamera &camera, float frameTime
-) {
+void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer,
+                                           std::vector<FrgGameObject> &gameObjects,
+                                           const FrgCamera &camera, float frameTime,
+                                           VkExtent2D screenSize, int debugMode) { {
     frgPipeline->bind(commandBuffer);
     auto projectionView = camera.getProjectionMatrix() * camera.getViewMatrix();
 
@@ -155,22 +157,27 @@ void SimpleRenderSystem::renderGameObjects(
 
     // Update light position based on orbit animation
     float angle = totalTime * glm::radians(90.0f); // 90 degrees per second
+    angle = 0.f;
     float radius = 3.0f;
     glm::vec3 lightPos = glm::vec3(radius * glm::cos(angle), 1.5f, radius * glm::sin(angle));
 
     // Update the light manager with the orbiting point light
-    if (light_manager.getPointLightCount() > 0) {
-        light_manager.updatePointLight(0, lightPos);
+    if (lightManager.getPointLightCount() > 0) {
+        lightManager.updatePointLight(0, lightPos);
     }
 
     for (auto &gameObject : gameObjects) {
         SimplePushConstantData push{};
         auto modelMat = gameObject.transform.mat4();
         push.transform = projectionView * modelMat;
+        push.modelMatrix = modelMat;
         push.normalMat = gameObject.transform.normalMat();
+        push.screenSize =
+            glm::vec2(static_cast<float>(screenSize.width), static_cast<float>(screenSize.height));
+        push.debugMode = debugMode;
 
         // Get light data from manager
-        LightData lightData = light_manager.getLightData();
+        LightData lightData = lightManager.getLightData();
         if (lightData.pointLightCount > 0) {
             push.pointLightPosition = lightData.pointLights[0].position;
             push.pointLightColor = lightData.pointLights[0].color;

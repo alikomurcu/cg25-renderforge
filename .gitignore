@@ -33,7 +33,6 @@ CMakeSettings.json
 .vscode/
 
 # Compiled objects and binaries
-*.obj
 *.o
 *.lo
 *.la

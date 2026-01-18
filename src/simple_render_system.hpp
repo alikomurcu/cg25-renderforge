@@ -16,7 +16,8 @@
 namespace frg {
 class SimpleRenderSystem {
   public:
-    SimpleRenderSystem(FrgDevice &device, VkRenderPass renderPass, FrgDescriptor &descriptor);
+    SimpleRenderSystem(FrgDevice &device, VkRenderPass renderPass, FrgDescriptor &descriptor,
+                       LightManager &lightManager);
     ~SimpleRenderSystem();
 
     SimpleRenderSystem(const SimpleRenderSystem &) = delete;
@@ -24,6 +25,9 @@ class SimpleRenderSystem {
     void renderGameObjects(
         VkCommandBuffer commandBuffer, std::vector<FrgGameObject> &gameObjects, const FrgCamera &camera, float frameTime
     );
+    void renderGameObjects(
+        VkCommandBuffer commandBuffer, std::vector<FrgGameObject> &gameObjects, const FrgCamera &camera, float frameTime, 
+            VkExtent2D screenSize, int debugMode = 0);
 
     // Lighting interface
     LightManager &getLightManager() { return light_manager; }
@@ -36,6 +40,12 @@ class SimpleRenderSystem {
     std::vector<VkBuffer> &getSSBOS() { return frgComputePipeline->getShaderStorageBuffers(); }
     void bindComputeGraphicsPipeline(VkCommandBuffer buff);
 
+
+    // Lighting interface
+    LightManager &getLightManager() {
+        return lightManager;
+    }
+
   private:
     void createPipelineLayout();
     void createComputeGraphicsPipelineLayout();
@@ -45,7 +55,7 @@ class SimpleRenderSystem {
 
     FrgDevice &frgDevice;
     FrgDescriptor &frgDescriptor;
-    LightManager light_manager;
+    LightManager &lightManager;
 
     std::unique_ptr<FrgPipeline> frgPipeline;
     std::unique_ptr<FrgPipeline> frgComputePipeline;
