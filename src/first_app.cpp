@@ -110,7 +110,7 @@ void FirstApp::run() {
 }
 
 void FirstApp::loadGameObjects() {
-    std::array<std::string, 1> file_paths = {"../resources/models/psx_garage/scene.gltf"};
+    std::array<std::string, 1> file_paths = {"../resources/models/abandoned_car/scene.gltf"};
 
     for (const auto &path : file_paths) {
         auto g_obj = FrgGameObject::createGameObject();
@@ -125,6 +125,7 @@ void FirstApp::loadGameObjects() {
     gameObjects[0].transform.rotation.x = glm::pi<float>();
     gameObjects[0].transform.rotation.y = glm::pi<float>() / 2.0f;
     gameObjects[0].transform.translation.z = 0.7f;
+    gameObjects[0].transform.scale = glm::vec3(.1f, .1f, .1f);
     // gameObjects[1].transform.translation.y = -0.2f;
     // gameObjects[1].transform.translation.z = 0.7f;
 

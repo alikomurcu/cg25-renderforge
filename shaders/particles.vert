@@ -10,7 +10,8 @@ layout(push_constant) uniform Push {
     mat4 normalMat;
     vec4 pointLightPosition;
     vec4 pointLightColor;  // w component is intensity
-    uint textureIndex;
+    int texture_idx;
+    int flags;
 } push;
 
 vec3 colors[] = vec3[](

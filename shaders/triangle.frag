@@ -15,7 +15,7 @@ layout(push_constant) uniform Push {
     vec4 pointLightPosition;
     vec4 pointLightColor;  // w component is intensity
     int texture_idx;
-    bool has_texture;
+    int flags;
 } push;
 
 const float AMBIENT_LIGHT = 0.02;
@@ -40,16 +40,25 @@ vec3 calculatePointLight(vec3 lightPos, vec3 lightColor, float intensity,
 void main() {
     // Sample texture
     vec3 texColor = vec3(1.0, 1.0, 1.0);
-    if(push.has_texture){
+    vec3 normal = fragNormal;
+    int num_textures = int(push.flags / 10) % 10;
+    bool has_normal = (push.flags % 10) > 0;
+    if(num_textures > 0){
         //texColor = vec3(1.0, 0.0, 0.0);
         texColor = texture(sampler2D(textures[push.texture_idx], tex_sampler), frag_tex_coord).rgb;
     }
+    if(has_normal){
+        vec3 normal_tex = texture(sampler2D(textures[push.texture_idx + 1], tex_sampler), frag_tex_coord).rgb;
+        normal = normalize(normal_tex * 2.0 - 1.0);
+    }
+
+
     // Calculate point light contribution
     vec3 pointLightContrib = calculatePointLight(
         push.pointLightPosition.xyz,
         push.pointLightColor.xyz,
         push.pointLightColor.w,  // intensity from w component
-        fragNormal,
+        normal,
         fragWorldPos
     );
     
@@ -59,4 +68,6 @@ void main() {
     // Apply lighting to texture
     vec3 finalColor = texColor * lighting;
     outColor = vec4(finalColor, 1.0);
+    if(has_normal)
+        outColor = vec4(normal, 1.0);
 }
