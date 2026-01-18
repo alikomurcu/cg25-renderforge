@@ -81,7 +81,7 @@ glm::vec4 FrgParticleDispenser::generate_point_in_sphere(glm::vec4 w_sphere_orig
         pos = glm::vec4(m_dist11(m_rand_eng), -1 * m_dist11(m_rand_eng), m_dist11(m_rand_eng), 0);
     } while (glm::length(pos) > 1);
 
-    pos /=1.f;
+    pos /=100.f;
     return pos + w_sphere_origin;
 }
 VkVertexInputBindingDescription Particle::getBindingDescription() {

@@ -5,8 +5,6 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/quaternion.hpp>
 
 // std
 #include <algorithm>
@@ -59,21 +57,10 @@ void CameraAnimationSystem::update(float globalTime,
   cameraObject.transform.translation =
       glm::mix(prevFrame.position, nextFrame.position, t);
 
-  // Slerp for rotation
-  // Convert Euler angles to Quaternions
-  // Note: glm::quat constructor from euler angles expects (pitch, yaw, roll)
-  // usually roughly (x, y, z) But our FrgCamera uses YXZ order in setViewYXZ.
-  // Let's create Quaternions consistent with YXZ rotation order if possible,
-  // or generally simple YXZ euler to quat conversion.
-  // glm::quat(vec3) takes euler angles.
-  glm::quat prevRot = glm::quat(prevFrame.rotation);
-  glm::quat nextRot = glm::quat(nextFrame.rotation);
-
-  // Slerp
-  glm::quat currentRot = glm::slerp(prevRot, nextRot, t);
-
-  // Convert back to Euler angles
-  cameraObject.transform.rotation = glm::eulerAngles(currentRot);
+  // Linear interpolation for rotation (Euler angles)
+  // This avoids artifacts from Quaternion conversions when coordinate systems mismatch
+  cameraObject.transform.rotation =
+      glm::mix(prevFrame.rotation, nextFrame.rotation, t);
 }
 
 float CameraAnimationSystem::getEndTime() const {

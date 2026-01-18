@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scene>
     <Settings>
-        <AutoCamera enabled="false" />
+        <AutoCamera enabled="true" />
         <SSAO enabled="true" />
         <DebugMode value="0" />
     </Settings>
@@ -9,8 +9,16 @@
     <GameObject model="../resources/models/viking_room/viking_room.obj">
         <Transform>
             <Translation x="0.0" y="0.0" z="2.0" />
-            <Rotation x="0.0" y="-1.57" z="0.0" />
+            <Rotation x="0.0" y="-3.14" z="0.0" />
             <Scale x="1.0" y="1.0" z="1.0" />
+        </Transform>
+    </GameObject>
+
+    <GameObject model="../resources/models/wf-trabant/trabant.gltf">
+        <Transform>
+            <Translation x="0.0" y="0.0" z="0.0" />
+            <Rotation x="0.0" y="1.57" z="3.14" />
+            <Scale x="0.0025" y="0.0025" z="0.0025" />
         </Transform>
     </GameObject>
 
@@ -21,14 +29,6 @@
             <Scale x="10.0" y="10.0" z="10.0" />
         </Transform>
     </GameObject>
-
-    <!-- <GameObject model="../resources/models/ground/ground.obj">
-        <Transform>
-            <Translation x="0.0" y="0.5" z="0.0" />
-            <Rotation x="0.0" y="0.0" z="0.0" />
-            <Scale x="2.0" y="1.0" z="2.0" />
-        </Transform>
-    </GameObject> -->
 
     <GameObject model="../resources/models/abandoned_car/scene.gltf">
         <Transform>
@@ -46,7 +46,7 @@
 
     <Light type="Point">
         <Position x="0.0" y="-2.0" z="0.0" />
-        <Color r="1.0" g="1.0" b="1.0" intensity="3.0" />
+        <Color r="1.0" g="0.0" b="0.0" intensity="3.0" />
     </Light>
 
     <GameObject model="../resources/models/ground/terrain.obj">
