@@ -93,6 +93,7 @@ add_executable(frg
     src/frg_game_object.cpp
     src/keyboard_movement_controller.cpp
     src/frg_lighting.cpp
+    src/frg_particle_dispenser.cpp
     src/frg_gbuffer.cpp
     src/frg_ssao.cpp
     src/ssao_render_system.cpp
@@ -101,7 +102,7 @@ add_executable(frg
 )
 
 # --- Shader compilation (GLSL -> SPIR-V) ---
-file(GLOB SHADER_SOURCES "${CMAKE_SOURCE_DIR}/shaders/*.vert" "${CMAKE_SOURCE_DIR}/shaders/*.frag")
+file(GLOB SHADER_SOURCES "${CMAKE_SOURCE_DIR}/shaders/*.vert" "${CMAKE_SOURCE_DIR}/shaders/*.frag" "${CMAKE_SOURCE_DIR}/shaders/*.comp")
 set(SPV_OUTPUTS)
 foreach(shader ${SHADER_SOURCES})
     get_filename_component(fname "${shader}" NAME)

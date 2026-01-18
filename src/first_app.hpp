@@ -3,6 +3,7 @@
 #include "frg_descriptor.hpp"
 #include "frg_device.hpp"
 #include "frg_game_object.hpp"
+#include "frg_particle_dispenser.hpp"
 #include "frg_gbuffer.hpp"
 #include "frg_lighting.hpp"
 #include "frg_renderer.hpp"
@@ -37,9 +38,13 @@ class FirstApp {
     FrgDevice frgDevice{frgWindow};
     FrgDescriptor frgDescriptor{frgDevice};
     FrgRenderer frgRenderer{frgWindow, frgDevice};
+    FrgParticleDispenser frgParticleDispenser{
+        frgDevice, 131072, HEIGHT, WIDTH, {0.6, 0.0, 0.0, 1.0}
+    };
 
     std::vector<VkDescriptorImageInfo> get_descriptors_of_game_objects();
     std::vector<FrgGameObject> gameObjects;
+    std::vector<VkCommandBuffer> computeCommandBuffers;
     FrgGameObject viewerObject{FrgGameObject::createGameObject()};
     LightManager lightManager;
     SceneSettings sceneSettings;

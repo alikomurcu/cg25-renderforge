@@ -21,6 +21,10 @@
 #include <vector>
 
 namespace frg {
+
+// flags
+//  - tens -> number of textures (i.e. 0010 -> 1 texture, 0031 -> 3 textures)
+//  - ones -> does it have a normalmap (1 -> true, 0 -> false)
 struct SimplePushConstantData {
   glm::mat4 transform{1.f};
   glm::mat4 modelMatrix{1.f};
@@ -29,6 +33,7 @@ struct SimplePushConstantData {
   glm::vec4 pointLightColor{1.f, 1.f, 1.f, 1.f}; // w is intensity
   glm::vec2 screenSize{800.f, 600.f};            // For SSAO UV calculation
   int texture_idx;
+  int flags;
   int debugMode{0}; // 0=normal, 1=SSAO only, 2=normals, 3=depth
 };
 class FrgModel {

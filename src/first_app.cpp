@@ -24,6 +24,7 @@ namespace frg {
 FirstApp::FirstApp() {
     loadGameObjects();
     frgDescriptor.write_descriptor_sets(get_descriptors_of_game_objects());
+    computeCommandBuffers = frgDevice.createComputeCommandBuffers(FrgSwapChain::MAX_FRAMES_IN_FLIGHT);
 }
 
 FirstApp::~FirstApp() {
@@ -56,6 +57,9 @@ void FirstApp::run() {
     // Create the main render system for final lighting
     SimpleRenderSystem simpleRenderSystem{frgDevice, frgRenderer.getSwapChainRenderPass(),
                                           frgDescriptor, lightManager};
+    simpleRenderSystem.setup_ssbos(frgParticleDispenser);
+    simpleRenderSystem.set_up_compute_desc_sets(frgParticleDispenser.particle_count() * sizeof(Particle));
+  
     FrgCamera camera{};
     // example camera setup - now loaded from scene if available
     // camera.setViewTarget(glm::vec3{0.f, 0.f, -2.f}, glm::vec3{0.f, 0.f, 2.5f});
@@ -185,11 +189,42 @@ void FirstApp::run() {
             // === PASS 4: Final Lighting ===
             // Render the scene with lighting (uses blurred SSAO for ambient)
             frgRenderer.beginSwapChainRenderPass(commandBuffer);
-            simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects, camera, frameTime,
-                                                 extent, debugMode);
+            simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects, camera, frameTime, extent, debugMode);
+            simpleRenderSystem.bindComputeGraphicsPipeline(commandBuffer);
+            UniformBufferObject ubo{};
+            ubo.deltaTime = frameTime;
+            SimplePushConstantData push{};
+            auto projView = camera.getProjectionMatrix() * camera.getViewMatrix();
+            auto modelMat = frgParticleDispenser.transform.mat4();
+            push.transform = projView * modelMat;
+            vkCmdPushConstants(
+                commandBuffer,
+                simpleRenderSystem.getComputeGraphicsPipelineLayout(),
+                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                0,
+                sizeof(SimplePushConstantData),
+                &push
+            );
+
+            ubo.w_parent_pos = {frgParticleDispenser.transform.translation, .6f};
+            frgRenderer.renderComputePipeline(
+                computeCommandBuffers,
+                frgDescriptor,
+                simpleRenderSystem.getComputePipelineLayout(),
+                simpleRenderSystem.getComputePipeline(),
+                frgParticleDispenser.particle_count(),
+                ubo,
+                simpleRenderSystem.getUbosMapped()
+            );
+            frgRenderer.delegateComputeBindAndDraw(
+                commandBuffer,
+                simpleRenderSystem.getSSBOS(),
+                frgParticleDispenser.particle_count()
+            );
+
 
             frgRenderer.endSwapChainRenderPass(commandBuffer);
-            frgRenderer.endFrame();
+            frgRenderer.endFrame(true);
         }
     }
 

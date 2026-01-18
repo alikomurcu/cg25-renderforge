@@ -1,10 +1,12 @@
 #pragma once
 #include "frg_device.hpp"
+#include "frg_swap_chain.hpp"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 #include <array>
+#include <cassert>
 #include <stdexcept>
 
 namespace frg {
@@ -15,23 +17,30 @@ class FrgDescriptor {
     FrgDescriptor(const FrgDescriptor &) = delete;
     FrgDescriptor &operator=(const FrgDescriptor &) = delete;
 
-    const VkDescriptorSetLayout *descriptorSetLayout() {
-        return &descriptor_set_layout;
-    }
-    const VkDescriptorSet *descriptorSet() {
-        return &descriptor_set;
-    }
-    uint32_t descriptorSetCount() {
-        return 1;
-    }
+    const VkDescriptorSetLayout *descriptorSetLayout() { return &descriptor_set_layout; }
+    const VkDescriptorSetLayout *getComputeDescriptorSetLayout() { return &comp_desc_set_layout; }
+    const VkDescriptorSet *descriptorSet() { return &descriptor_set; }
+    const std::vector<VkDescriptorSet> &getComputeDescriptorSet() { return comp_descriptor_set; }
+    uint32_t descriptorSetCount() { return 1; }
+    uint32_t getComputeDescriptorSetCount() { return static_cast<uint32_t>(comp_descriptor_set.size()); }
 
     void write_descriptor_sets(const std::vector<VkDescriptorImageInfo> &image_infos);
-
-    // Set SSAO texture for the final lighting pass
+    void write_comp_descriptor_sets(
+        std::vector<VkBuffer> &uni_buffers, size_t ubo_size, std::vector<VkBuffer> &shader_storage_buffers,
+        size_t ssbo_size
+    );
+  
+      // Set SSAO texture for the final lighting pass
     void setSSAOTexture(VkDescriptorImageInfo ssaoInfo);
+
+    void recordComputeCommandBuffer(
+        VkCommandBuffer command_buf, VkPipelineLayout pipeline_layout, VkPipeline compute_pipeline, size_t dispatch,
+        size_t desc_idx
+    );
 
   private:
     void create_descriptor_set_layout_binding();
+    void create_comp_descriptor_set_layout_binding();
     void create_descriptor_pool();
     void create_descriptor_sets();
     const uint32_t DEFAULT_POOL_SIZE_INCR = 255; // 255 + 1 SSAO = 256 (device limit)
@@ -39,8 +48,10 @@ class FrgDescriptor {
     uint32_t texture_count = 0;
     FrgDevice &frg_device;
     VkDescriptorSetLayout descriptor_set_layout;
+    VkDescriptorSetLayout comp_desc_set_layout;
     VkDescriptorPool descriptor_pool;
     VkDescriptorSet descriptor_set;
+    std::vector<VkDescriptorSet> comp_descriptor_set;
 
     // Track if SSAO has been set
     bool ssaoEnabled = false;

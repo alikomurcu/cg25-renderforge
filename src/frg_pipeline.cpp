@@ -8,16 +8,44 @@
 #include <stdexcept>
 
 namespace frg {
-FrgPipeline::FrgPipeline(FrgDevice &device, const std::string &vertFilePath,
-                         const std::string &fragFilePath, const PipelineConfigInfo &configInfo)
+FrgPipeline::FrgPipeline(
+    FrgDevice &device, const std::string &vertFilePath, const std::string &fragFilePath,
+    const PipelineConfigInfo &configInfo
+)
     : frgDevice(device) {
-    createGraphicsPipeline(vertFilePath, fragFilePath, configInfo);
+    auto attr = Vertex::get_attribute_descriptions();
+    std::vector<VkVertexInputAttributeDescription> inp_attr(attr.begin(), attr.end());
+    createGraphicsPipeline(vertFilePath, fragFilePath, configInfo, Vertex::get_binding_descriptions(), inp_attr);
+}
+
+FrgPipeline::FrgPipeline(
+    FrgDevice &device, const std::string &vertFilePath, const std::string &fragFilePath,
+    const std::string &compFilePath, const PipelineConfigInfo &configInfo,
+    std::vector<VkDescriptorSetLayout> &desc_set_layouts
+)
+    : frgDevice{device} {
+    std::vector<VkVertexInputBindingDescription> desc = {Particle::getBindingDescription()};
+    auto attr = Particle::getAttributeDescriptions();
+    std::vector<VkVertexInputAttributeDescription> inp_attr(attr.begin(), attr.end());
+    createGraphicsPipeline(vertFilePath, fragFilePath, configInfo, desc, inp_attr);
+    createComputePipeline(compFilePath, desc_set_layouts);
+    create_shader_storage_buffers();
 }
 
 FrgPipeline::~FrgPipeline() {
     vkDestroyShaderModule(frgDevice.device(), vertShaderModule, nullptr);
     vkDestroyShaderModule(frgDevice.device(), fragShaderModule, nullptr);
+    if (compShaderModule != VK_NULL_HANDLE)
+        vkDestroyShaderModule(frgDevice.device(), compShaderModule, nullptr);
     vkDestroyPipeline(frgDevice.device(), graphicsPipeline, nullptr);
+    if (computePipeline != VK_NULL_HANDLE)
+        vkDestroyPipeline(frgDevice.device(), computePipeline, nullptr);
+    if (computePipelineLayout != VK_NULL_HANDLE)
+        vkDestroyPipelineLayout(frgDevice.device(), computePipelineLayout, nullptr);
+    for (size_t i = 0; i < shader_storage_buffers.size(); ++i) {
+        vkDestroyBuffer(frgDevice.device(), shader_storage_buffers[i], nullptr);
+        vkFreeMemory(frgDevice.device(), shader_storage_buffers_memory[i], nullptr);
+    }
 }
 
 std::vector<char> FrgPipeline::readFile(const std::string &filePath) {
@@ -37,15 +65,53 @@ std::vector<char> FrgPipeline::readFile(const std::string &filePath) {
     return buffer;
 }
 
-void FrgPipeline::createGraphicsPipeline(const std::string &vertFilePath,
-                                         const std::string &fragFilePath,
-                                         const PipelineConfigInfo &configInfo) {
-    assert(configInfo.pipelineLayout != VK_NULL_HANDLE &&
-           "Cannot create graphics pipeline: no pipeline layout provided in "
-           "configInfo");
-    assert(configInfo.renderPass != VK_NULL_HANDLE &&
-           "Cannot create graphics pipeline: no render pass provided in "
-           "configInfo");
+void FrgPipeline::createComputePipeline(const std::string &compFilePath, std::vector<VkDescriptorSetLayout> &layouts) {
+    auto compCode = readFile(compFilePath);
+    createShaderModule(compCode, &compShaderModule);
+
+    VkPipelineShaderStageCreateInfo comp_shader_stage_create_info{};
+    comp_shader_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    comp_shader_stage_create_info.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    comp_shader_stage_create_info.module = compShaderModule;
+    comp_shader_stage_create_info.pName = "main";
+
+    VkPipelineLayoutCreateInfo pipeline_layout_info{};
+    pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipeline_layout_info.setLayoutCount = 1;
+    pipeline_layout_info.pSetLayouts = layouts.data();
+
+    if (vkCreatePipelineLayout(frgDevice.device(), &pipeline_layout_info, nullptr, &computePipelineLayout) !=
+        VK_SUCCESS)
+    {
+        throw std::runtime_error("failed to create compute pipeline layout!");
+    }
+
+    VkComputePipelineCreateInfo pipeline_info{};
+    pipeline_info.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    pipeline_info.layout = computePipelineLayout;
+    pipeline_info.stage = comp_shader_stage_create_info;
+    if (vkCreateComputePipelines(frgDevice.device(), VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &computePipeline) !=
+        VK_SUCCESS)
+    {
+        throw std::runtime_error("failed to create compute pipeline!");
+    }
+}
+
+void FrgPipeline::createGraphicsPipeline(
+    const std::string &vertFilePath, const std::string &fragFilePath, const PipelineConfigInfo &configInfo,
+    std::vector<VkVertexInputBindingDescription> input_binding_desc,
+    std::vector<VkVertexInputAttributeDescription> attr_desc
+) {
+
+    assert(
+        configInfo.pipelineLayout != VK_NULL_HANDLE &&
+        "Cannot create graphics pipeline: no pipeline layout provided in "
+        "configInfo"
+    );
+    assert(
+        configInfo.renderPass != VK_NULL_HANDLE && "Cannot create graphics pipeline: no render pass provided in "
+                                                   "configInfo"
+    );
 
     auto vertCode = readFile(vertFilePath);
     auto fragCode = readFile(fragFilePath);
@@ -115,8 +181,9 @@ void FrgPipeline::createGraphicsPipeline(const std::string &vertFilePath,
     pipelineInfo.basePipelineIndex = -1;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-    if (vkCreateGraphicsPipelines(frgDevice.device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr,
-                                  &graphicsPipeline) != VK_SUCCESS) {
+    if (vkCreateGraphicsPipelines(frgDevice.device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) !=
+        VK_SUCCESS)
+    {
         throw std::runtime_error("failed to create graphics pipeline!");
     }
 }
@@ -127,8 +194,7 @@ void FrgPipeline::createShaderModule(const std::vector<char> &code, VkShaderModu
     createInfo.codeSize = code.size();
     createInfo.pCode = reinterpret_cast<const uint32_t *>(code.data());
 
-    if (vkCreateShaderModule(frgDevice.device(), &createInfo, nullptr, shaderModule) !=
-        VK_SUCCESS) {
+    if (vkCreateShaderModule(frgDevice.device(), &createInfo, nullptr, shaderModule) != VK_SUCCESS) {
         throw std::runtime_error("failed to create shader module!");
     }
 }
@@ -137,10 +203,14 @@ void FrgPipeline::bind(VkCommandBuffer commandBuffer) {
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 }
 
-void FrgPipeline::defaultPipelineConfigInfo(PipelineConfigInfo &configInfo) {
-    configInfo.inputAssemblyInfo.sType =
-        VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    configInfo.inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+void FrgPipeline::bindCompute(VkCommandBuffer commandBuffer) {
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computePipeline);
+}
+
+void FrgPipeline::defaultPipelineConfigInfo(PipelineConfigInfo &configInfo, bool compute) {
+    configInfo.inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    configInfo.inputAssemblyInfo.topology =
+        compute ? VK_PRIMITIVE_TOPOLOGY_POINT_LIST : VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     configInfo.inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
 
     configInfo.viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -170,8 +240,7 @@ void FrgPipeline::defaultPipelineConfigInfo(PipelineConfigInfo &configInfo) {
     configInfo.multisampleInfo.alphaToOneEnable = VK_FALSE;      // Optional
 
     configInfo.colorBlendAttachment.colorWriteMask =
-        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
-        VK_COLOR_COMPONENT_A_BIT;
+        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
     configInfo.colorBlendAttachment.blendEnable = VK_FALSE;
     configInfo.colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;  // Optional
     configInfo.colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO; // Optional
@@ -204,8 +273,11 @@ void FrgPipeline::defaultPipelineConfigInfo(PipelineConfigInfo &configInfo) {
     configInfo.dynamicStateEnables = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
     configInfo.dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     configInfo.dynamicStateInfo.pDynamicStates = configInfo.dynamicStateEnables.data();
-    configInfo.dynamicStateInfo.dynamicStateCount =
-        static_cast<uint32_t>(configInfo.dynamicStateEnables.size());
+    configInfo.dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(configInfo.dynamicStateEnables.size());
     configInfo.dynamicStateInfo.flags = 0;
+}
+void FrgPipeline::create_shader_storage_buffers() {
+    shader_storage_buffers.resize(FrgSwapChain::MAX_FRAMES_IN_FLIGHT);
+    shader_storage_buffers_memory.resize(FrgSwapChain::MAX_FRAMES_IN_FLIGHT);
 }
 } // namespace frg

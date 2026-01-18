@@ -6,7 +6,9 @@
 #include "frg_game_object.hpp"
 #include "frg_lighting.hpp"
 #include "frg_model.hpp"
+#include "frg_particle_dispenser.hpp"
 #include "frg_pipeline.hpp"
+#include "frg_renderer.hpp"
 // std
 #include <memory>
 #include <vector>
@@ -20,9 +22,24 @@ class SimpleRenderSystem {
 
     SimpleRenderSystem(const SimpleRenderSystem &) = delete;
     SimpleRenderSystem &operator=(const SimpleRenderSystem &) = delete;
-    void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<FrgGameObject> &gameObjects,
-                           const FrgCamera &camera, float frameTime, VkExtent2D screenSize,
-                           int debugMode = 0);
+    void renderGameObjects(
+        VkCommandBuffer commandBuffer, std::vector<FrgGameObject> &gameObjects, const FrgCamera &camera, float frameTime
+    );
+    void renderGameObjects(
+        VkCommandBuffer commandBuffer, std::vector<FrgGameObject> &gameObjects, const FrgCamera &camera, float frameTime, 
+            VkExtent2D screenSize, int debugMode = 0);
+
+    // Lighting interface
+    LightManager &getLightManager() { return light_manager; }
+    VkPipelineLayout getComputePipelineLayout() { return frgComputePipeline->getComputePipelineLayout(); }
+    VkPipeline getComputePipeline() { return frgComputePipeline->getComputePipeline(); }
+    VkPipelineLayout getComputeGraphicsPipelineLayout() { return computeGraphicsPipelineLayout; };
+    std::vector<void *> &getUbosMapped() { return ubos_mapped; }
+    void set_up_compute_desc_sets(size_t ssbo_size);
+    void setup_ssbos(FrgParticleDispenser &dispenser);
+    std::vector<VkBuffer> &getSSBOS() { return frgComputePipeline->getShaderStorageBuffers(); }
+    void bindComputeGraphicsPipeline(VkCommandBuffer buff);
+
 
     // Lighting interface
     LightManager &getLightManager() {
@@ -31,13 +48,21 @@ class SimpleRenderSystem {
 
   private:
     void createPipelineLayout();
+    void createComputeGraphicsPipelineLayout();
     void createPipeline(VkRenderPass renderPass);
+    void createComputePipeline(VkRenderPass renderPass);
+    void createUniformBuffers();
 
     FrgDevice &frgDevice;
     FrgDescriptor &frgDescriptor;
     LightManager &lightManager;
 
     std::unique_ptr<FrgPipeline> frgPipeline;
+    std::unique_ptr<FrgPipeline> frgComputePipeline;
     VkPipelineLayout pipelineLayout;
+    VkPipelineLayout computeGraphicsPipelineLayout;
+    std::vector<VkBuffer> ubos;
+    std::vector<VkDeviceMemory> ubos_memory;
+    std::vector<void *> ubos_mapped;
 };
 } // namespace frg

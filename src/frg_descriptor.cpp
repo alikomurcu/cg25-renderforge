@@ -3,12 +3,14 @@
 namespace frg {
 FrgDescriptor::FrgDescriptor(FrgDevice &device) : frg_device{device} {
     create_descriptor_set_layout_binding();
+    create_comp_descriptor_set_layout_binding();
     create_descriptor_pool();
     create_descriptor_sets();
 }
 FrgDescriptor::~FrgDescriptor() {
     vkDestroyDescriptorPool(frg_device.device(), descriptor_pool, nullptr);
     vkDestroyDescriptorSetLayout(frg_device.device(), descriptor_set_layout, nullptr);
+    vkDestroyDescriptorSetLayout(frg_device.device(), comp_desc_set_layout, nullptr);
 }
 
 void FrgDescriptor::create_descriptor_set_layout_binding() {
@@ -53,9 +55,38 @@ void FrgDescriptor::create_descriptor_set_layout_binding() {
     layout_flags_info.pNext = nullptr;
     layout_info.pNext = reinterpret_cast<void *>(&layout_flags_info);
 
-    if (vkCreateDescriptorSetLayout(frg_device.device(), &layout_info, nullptr,
-                                    &descriptor_set_layout) != VK_SUCCESS) {
+    if (vkCreateDescriptorSetLayout(frg_device.device(), &layout_info, nullptr, &descriptor_set_layout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor set layout!");
+    }
+}
+
+void FrgDescriptor::create_comp_descriptor_set_layout_binding() {
+    std::array<VkDescriptorSetLayoutBinding, 3> layout_bindings{};
+    layout_bindings[0].binding = 0;
+    layout_bindings[0].descriptorCount = 1;
+    layout_bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    layout_bindings[0].pImmutableSamplers = nullptr;
+    layout_bindings[0].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
+    layout_bindings[1].binding = 1;
+    layout_bindings[1].descriptorCount = 1;
+    layout_bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    layout_bindings[1].pImmutableSamplers = nullptr;
+    layout_bindings[1].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
+    layout_bindings[2].binding = 2;
+    layout_bindings[2].descriptorCount = 1;
+    layout_bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    layout_bindings[2].pImmutableSamplers = nullptr;
+    layout_bindings[2].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
+    VkDescriptorSetLayoutCreateInfo layout_info{};
+    layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layout_info.bindingCount = static_cast<uint32_t>(layout_bindings.size());
+    layout_info.pBindings = layout_bindings.data();
+
+    if (vkCreateDescriptorSetLayout(frg_device.device(), &layout_info, nullptr, &comp_desc_set_layout) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create compute descriptor set layout!");
     }
 }
 
@@ -73,10 +104,9 @@ void FrgDescriptor::create_descriptor_pool() {
     pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
     pool_info.pPoolSizes = pool_sizes.data();
-    pool_info.maxSets = texture_descriptor_size + 1;
+    pool_info.maxSets = texture_descriptor_size + static_cast<uint32_t>(FrgSwapChain::MAX_FRAMES_IN_FLIGHT);
 
-    if (vkCreateDescriptorPool(frg_device.device(), &pool_info, nullptr, &descriptor_pool) !=
-        VK_SUCCESS) {
+    if (vkCreateDescriptorPool(frg_device.device(), &pool_info, nullptr, &descriptor_pool) != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor pool!");
     }
 }
@@ -118,8 +148,112 @@ void FrgDescriptor::write_descriptor_sets(const std::vector<VkDescriptorImageInf
     set_writes[1].pBufferInfo = 0;
     set_writes[1].pImageInfo = image_infos.data();
 
-    vkUpdateDescriptorSets(frg_device.device(), static_cast<uint32_t>(set_writes.size()),
-                           set_writes.data(), 0, nullptr);
+    vkUpdateDescriptorSets(
+        frg_device.device(),
+        static_cast<uint32_t>(set_writes.size()),
+        set_writes.data(),
+        0,
+        nullptr
+    );
+}
+
+void FrgDescriptor::write_comp_descriptor_sets(
+    std::vector<VkBuffer> &uni_buffers, size_t ubo_size, std::vector<VkBuffer> &shader_storage_buffers, size_t ssbo_size
+) {
+    uint32_t layout_count = FrgSwapChain::MAX_FRAMES_IN_FLIGHT;
+    assert(
+        layout_count == uni_buffers.size() &&
+        "The program requires the same amount of descriptor sets as uniform buffers!"
+    );
+    std::vector<VkDescriptorSetLayout> layouts(layout_count, comp_desc_set_layout);
+    VkDescriptorSetAllocateInfo alloc_info{};
+    alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    alloc_info.descriptorPool = descriptor_pool;
+    alloc_info.descriptorSetCount = layout_count;
+    alloc_info.pSetLayouts = layouts.data();
+
+    comp_descriptor_set.resize(layout_count);
+    if (vkAllocateDescriptorSets(frg_device.device(), &alloc_info, comp_descriptor_set.data()) != VK_SUCCESS) {
+        throw std::runtime_error("failed to allocate compute descriptor sets!");
+    }
+
+    for (uint32_t i = 0; i < layout_count; ++i) {
+        VkDescriptorBufferInfo uniform_buffer_info{};
+        uniform_buffer_info.buffer = uni_buffers[i];
+        uniform_buffer_info.offset = 0;
+        uniform_buffer_info.range = ubo_size;
+
+        std::array<VkWriteDescriptorSet, 3> descriptor_writes{};
+        descriptor_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptor_writes[0].dstSet = comp_descriptor_set[i];
+        descriptor_writes[0].dstBinding = 0;
+        descriptor_writes[0].dstArrayElement = 0;
+        descriptor_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptor_writes[0].descriptorCount = 1;
+        descriptor_writes[0].pBufferInfo = &uniform_buffer_info;
+
+        VkDescriptorBufferInfo storage_buffer_info_last_frame{};
+        storage_buffer_info_last_frame.buffer = shader_storage_buffers[(i + layout_count - 1) % layout_count];
+        storage_buffer_info_last_frame.offset = 0;
+        storage_buffer_info_last_frame.range = ssbo_size;
+
+        descriptor_writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptor_writes[1].dstSet = comp_descriptor_set[i];
+        descriptor_writes[1].dstBinding = 1;
+        descriptor_writes[1].dstArrayElement = 0;
+        descriptor_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        descriptor_writes[1].descriptorCount = 1;
+        descriptor_writes[1].pBufferInfo = &storage_buffer_info_last_frame;
+
+        VkDescriptorBufferInfo storage_buffer_info_current_frame{};
+        storage_buffer_info_current_frame.buffer = shader_storage_buffers[i];
+        storage_buffer_info_current_frame.offset = 0;
+        storage_buffer_info_current_frame.range = ssbo_size;
+
+        descriptor_writes[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptor_writes[2].dstSet = comp_descriptor_set[i];
+        descriptor_writes[2].dstBinding = 2;
+        descriptor_writes[2].dstArrayElement = 0;
+        descriptor_writes[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        descriptor_writes[2].descriptorCount = 1;
+        descriptor_writes[2].pBufferInfo = &storage_buffer_info_current_frame;
+
+        vkUpdateDescriptorSets(
+            frg_device.device(),
+            static_cast<uint32_t>(descriptor_writes.size()),
+            descriptor_writes.data(),
+            0,
+            nullptr
+        );
+    }
+}
+
+void FrgDescriptor::recordComputeCommandBuffer(
+    VkCommandBuffer command_buf, VkPipelineLayout pipeline_layout, VkPipeline compute_pipeline, size_t dispatch,
+    size_t desc_idx
+) {
+    VkCommandBufferBeginInfo begin_info{};
+    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+    if (vkBeginCommandBuffer(command_buf, &begin_info) != VK_SUCCESS) {
+        throw std::runtime_error("failed to begin recording compute command buffer!");
+    }
+
+    vkCmdBindPipeline(command_buf, VK_PIPELINE_BIND_POINT_COMPUTE, compute_pipeline);
+    vkCmdBindDescriptorSets(
+        command_buf,
+        VK_PIPELINE_BIND_POINT_COMPUTE,
+        pipeline_layout,
+        0,
+        1,
+        &comp_descriptor_set[desc_idx],
+        0,
+        nullptr
+    );
+    vkCmdDispatch(command_buf, dispatch / 256, 1, 1);
+    if (vkEndCommandBuffer(command_buf) != VK_SUCCESS) {
+        throw std::runtime_error("failed to record compute command buffer!");
+    }
 }
 
 void FrgDescriptor::setSSAOTexture(VkDescriptorImageInfo ssaoInfo) {

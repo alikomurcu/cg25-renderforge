@@ -10,14 +10,15 @@ layout(location = 2) out vec3 fragWorldPos;
 
 // Push constants - MUST match triangle.frag exactly!
 layout(push_constant) uniform Push {
-  mat4 transform; // transform is actually projection * view * model
-  mat4 modelMatrix;
-  mat4 normalMat;
-  vec4 pointLightPosition;
-  vec4 pointLightColor; // w component is intensity
-  vec2 screenSize;      // For SSAO UV calculation
-  int texture_idx;
-  int debugMode;        // 0=normal, 1=SSAO only, 2=normals, 3=depth
+    mat4 transform; // transform is actually projection * view * model
+    mat4 modelMatrix;
+    mat4 normalMat;
+    vec4 pointLightPosition;
+    vec4 pointLightColor; // w component is intensity
+    vec2 screenSize;      // Actual screen size for SSAO UV calculation
+    int texture_idx;
+    int flags;
+    int debugMode;        // 0=normal, 1=SSAO only, 2=normals, 3=depth
 }
 push;
 
