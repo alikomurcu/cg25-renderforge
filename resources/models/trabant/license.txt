@@ -1,0 +1,11 @@
+Model Information:
+* title:	Trabant
+* source:	https://sketchfab.com/3d-models/trabant-c39a112a1d8242e5a913141f703f2687
+* author:	haricsiko (https://sketchfab.com/haricsiko)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Trabant" (https://sketchfab.com/3d-models/trabant-c39a112a1d8242e5a913141f703f2687) by haricsiko (https://sketchfab.com/haricsiko) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
