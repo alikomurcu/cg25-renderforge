@@ -19,9 +19,10 @@ struct Keyframe {
 class CameraAnimationSystem {
 public:
   void addKeyframe(float time, glm::vec3 position, glm::vec3 rotation);
-  
+
   // Updates the camera object's transform based on the global time
   void update(float globalTime, FrgGameObject& cameraObject);
+  float getEndTime() const;
 
 private:
   std::vector<Keyframe> keyframes;

@@ -71,11 +71,11 @@ void FirstApp::run() {
     // Create a circular path around the viking room at (0,0,2)
     // Radius ~3.0
     // t=0: Start position
-    cameraAnimationSystem.addKeyframe(0.f, glm::vec3{0.f, -1.f, -1.f}, glm::vec3{0.f, 0.f, 0.f});
+    cameraAnimationSystem.addKeyframe(0.f, glm::vec3{-6.f, -1.f, -6.f}, glm::vec3{0.f, 0.78f, 0.f});
     // t=2.5: Middle position
-    cameraAnimationSystem.addKeyframe(2.5f, glm::vec3{3.f, -1.f, 2.f}, glm::vec3{0.f, -1.57f, 0.f});
-    // t=5.0: Return to start position (Back and Forth loop)
-    cameraAnimationSystem.addKeyframe(5.0f, glm::vec3{0.f, -1.f, -1.f}, glm::vec3{0.f, 0.f, 0.f});
+    cameraAnimationSystem.addKeyframe(2.5f, glm::vec3{-6.f, -1.f, 6.f}, glm::vec3{0.f, 2.0f, 0.f});
+    cameraAnimationSystem.addKeyframe(5.f, glm::vec3{6.f, -1.f, 6.f}, glm::vec3{0.f, 1.57f, 0.f});
+    cameraAnimationSystem.addKeyframe(7.5f, glm::vec3{-6.f, -1.f, -6.f}, glm::vec3{0.f, 0.78f, 0.f});
 
     bool isAutoCamera = sceneSettings.autoCamera; // Start with animation enabled from config
     bool mKeyWasPressed = false;
@@ -146,12 +146,14 @@ void FirstApp::run() {
         if (isAutoCamera) {
             animationTime += frameTime;
             // Loop the animation
-            if (animationTime > 5.f) {
-                animationTime = 0.f; // Simple loop
+            float animationEndTime = cameraAnimationSystem.getEndTime();
+            if (animationTime > animationEndTime) {
+                animationTime = 0.f;
             }
-            cameraAnimationSystem.update(animationTime, viewerObject);
+          cameraAnimationSystem.update(animationTime, viewerObject);
         } else {
-            cameraController.moveInPlaneXZ(frgWindow.getGLFWwindow(), frameTime, viewerObject);
+          cameraController.moveInPlaneXZ(frgWindow.getGLFWwindow(), frameTime,
+                                        viewerObject);
         }
 
         camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);

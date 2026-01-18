@@ -76,4 +76,11 @@ void CameraAnimationSystem::update(float globalTime,
   cameraObject.transform.rotation = glm::eulerAngles(currentRot);
 }
 
+float CameraAnimationSystem::getEndTime() const {
+  if (keyframes.empty()) {
+    return 0.f;
+  }
+  return keyframes.back().time;
+}
+
 } // namespace frg
