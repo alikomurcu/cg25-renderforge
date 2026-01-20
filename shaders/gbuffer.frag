@@ -17,7 +17,7 @@ void main() {
     
     // Store view-space normal (normalized)
     // Pack into [0,1] range is not needed since we use RGBA16F
-    gNormal = vec4(normalize(TBN * fragViewNormal), 1.0);
+    gNormal = normalize(vec4(TBN * fragViewNormal, 1.0));
     //gNormal = vec4(normalize( fragViewNormal), 1.0);
 
 }

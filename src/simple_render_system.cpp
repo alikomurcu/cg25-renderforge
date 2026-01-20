@@ -156,9 +156,9 @@ void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer,
   totalTime += frameTime;
 
   // Update light position based on orbit animation
-  float angle = totalTime * glm::radians(90.0f); // 90 degrees per second
-  angle = 0.f;
-  float radius = 3.0f;
+  float angle = totalTime * glm::radians(30.0f); // 90 degrees per second
+  //angle = 0.f;
+  float radius = 5.0f;
     glm::vec3 lightPos = glm::vec3(radius * glm::cos(angle), 1.5f, radius * glm::sin(angle));
 
   // Update the light manager with the orbiting point light

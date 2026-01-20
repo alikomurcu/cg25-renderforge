@@ -43,8 +43,8 @@ void FrgModel::load_model(const std::string &path) {
     Assimp::Importer importer;
     const aiScene *scene = importer.ReadFile(
         path,
-        aiProcess_Triangulate | aiProcess_SortByPType | aiProcess_GenNormals | aiProcess_FlipUVs |
-            aiProcess_PreTransformVertices | aiProcess_ConvertToLeftHanded | aiProcess_CalcTangentSpace
+        aiProcess_Triangulate | aiProcess_SortByPType | aiProcess_FlipUVs | aiProcess_ConvertToLeftHanded |
+            aiProcess_PreTransformVertices  | aiProcess_CalcTangentSpace
     );
 
     if (scene == nullptr || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
