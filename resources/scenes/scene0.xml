@@ -61,7 +61,7 @@
         <Transform>
             <Translation x="0.0" y="0.0" z="0.0" />
             <Scale x="2.0" y="1.0" z="2.0" />
-            <Rotation x="0.0" y="0.0" z="0.0" />
+            <Rotation x="3.14" y="0.0" z="0.0" />
         </Transform>
     </GameObject>
     <GameObject model="../resources/models/ground/road.obj">
