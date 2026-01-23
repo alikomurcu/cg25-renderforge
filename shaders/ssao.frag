@@ -67,7 +67,7 @@ void main() {
         
         // Check if sample is occluded
         // If the actual geometry is closer than our sample point, it's occluded
-        occlusion += (sampleDepth >= samplePos.z + params.bias ? 1.0 : 0.0) * rangeCheck;
+        occlusion += (sampleDepth <= samplePos.z - params.bias ? 1.0 : 0.0) * rangeCheck;
     }
     
     // Average and invert (1.0 = no occlusion, 0.0 = fully occluded)
