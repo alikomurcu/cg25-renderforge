@@ -6,17 +6,17 @@
         <DebugMode value="0" />
     </Settings>
 
-    <GameObject model="../resources/models/viking_room/viking_room.obj">
+    <GameObject model="../resources/models/origami_unicorn/scene.gltf">
         <Transform>
-            <Translation x="0.0" y="0.0" z="2.0" />
-            <Rotation x="0.0" y="-3.14" z="0.0" />
-            <Scale x="1.0" y="1.0" z="1.0" />
+            <Translation x="-2.0" y="0.0" z="4.0" />
+            <Rotation x="3.14" y="0.0" z="0.0" />
+            <Scale x="0.1" y="0.1" z="0.1" />
         </Transform>
     </GameObject>
 
     <GameObject model="../resources/models/wf-trabant/trabant.gltf">
         <Transform>
-            <Translation x="0.0" y="0.0" z="0.0" />
+            <Translation x="0.0" y="0.0" z="4.0" />
             <Rotation x="0.0" y="1.57" z="3.14" />
             <Scale x="0.0025" y="0.0025" z="0.0025" />
         </Transform>
@@ -45,17 +45,9 @@
     </Camera>
 
     <Light type="Point">
-        <Position x="0.0" y="-1.0" z="2.0" />
+        <Position x="0.0" y="-2.0" z="2.0" />
         <Color r="1.0" g="1.0" b="1.0" intensity="10.0" />
     </Light>
-    
-    <GameObject model="../resources/models/backpack/backpack.obj">
-        <Transform>
-            <Translation x="3.0" y="-0.5" z="0.0" />
-            <Rotation x="-1.57" y="0.0" z="0.0" />
-            <Scale x="0.2" y="0.2" z="0.2" />
-        </Transform>
-    </GameObject>
 
     <GameObject model="../resources/models/ground/terrain.obj">
         <Transform>

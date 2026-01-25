@@ -159,7 +159,7 @@ void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer,
   float angle = totalTime * glm::radians(30.0f); // 90 degrees per second
   //angle = 0.f;
   float radius = 5.0f;
-    glm::vec3 lightPos = glm::vec3(radius * glm::cos(angle), 1.5f, radius * glm::sin(angle));
+    glm::vec3 lightPos = glm::vec3(radius * glm::cos(angle), -1.5f, radius * glm::sin(angle));
 
   // Update the light manager with the orbiting point light
   if (lightManager.getPointLightCount() > 0) {
