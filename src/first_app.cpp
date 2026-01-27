@@ -235,7 +235,7 @@ void FirstApp::run() {
 }
 
 void FirstApp::loadGameObjects() {
-    SceneLoader::load(frgDevice, "../resources/scenes/scene0.xml", gameObjects, viewerObject,
+    SceneLoader::load(frgDevice, "resources/scenes/scene0.xml", gameObjects, viewerObject,
                       lightManager, sceneSettings);
 }
 } // namespace frg

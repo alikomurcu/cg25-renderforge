@@ -6,7 +6,7 @@
         <DebugMode value="0" />
     </Settings>
 
-    <GameObject model="../resources/models/origami_unicorn/scene.gltf">
+    <GameObject model="resources/models/origami_unicorn/scene.gltf">
         <Transform>
             <Translation x="-2.0" y="0.0" z="4.0" />
             <Rotation x="3.14" y="0.0" z="0.0" />
@@ -14,7 +14,7 @@
         </Transform>
     </GameObject>
 
-    <GameObject model="../resources/models/wf-trabant/trabant.gltf">
+    <GameObject model="resources/models/wf-trabant/trabant.gltf">
         <Transform>
             <Translation x="0.0" y="0.0" z="4.0" />
             <Rotation x="0.0" y="1.57" z="3.14" />
@@ -22,7 +22,7 @@
         </Transform>
     </GameObject>
 
-    <GameObject model="../resources/models/new-garage/garage.obj">
+    <GameObject model="resources/models/new-garage/garage.obj">
         <Transform>
             <Translation x="0.0" y="0.0" z="-2.0" />
             <Rotation x="3.14" y="1.57" z="0.0" />
@@ -30,7 +30,7 @@
         </Transform>
     </GameObject>
 
-    <GameObject model="../resources/models/abandoned_car/scene.gltf">
+    <GameObject model="resources/models/abandoned_car/scene.gltf">
         <Transform>
             <Translation x="2.0" y="0.0" z="-2.5" />
             <Rotation x="0.0" y="3.14" z="3.141" />
@@ -49,14 +49,14 @@
         <Color r="1.0" g="1.0" b="1.0" intensity="10.0" />
     </Light>
 
-    <GameObject model="../resources/models/ground/terrain.obj">
+    <GameObject model="resources/models/ground/terrain.obj">
         <Transform>
             <Translation x="0.0" y="0.0" z="0.0" />
             <Scale x="2.0" y="1.0" z="2.0" />
             <Rotation x="3.14" y="0.0" z="0.0" />
         </Transform>
     </GameObject>
-    <GameObject model="../resources/models/ground/road.obj">
+    <GameObject model="resources/models/ground/road.obj">
         <Transform>
             <Translation x="0.0" y="0.0" z="0.0" />
             <Scale x="2.0" y="1.0" z="2.0" />
